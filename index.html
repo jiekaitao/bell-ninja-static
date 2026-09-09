@@ -1,11 +1,13 @@
+<!DOCTYPE html>
 <!--meta http-equiv="Refresh" content="0; url='https://bell.ninja/index-special'" /-->
 <script>
     //alert('The schedule may not be accurate today');
 </script>
-<!DOCTYPE html>
 <html>
 
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
 
     <script data-ad-client="ca-pub-9017404753831118" async
         src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
@@ -145,7 +147,7 @@
                             <br>
 
 
-                            <div style="font-size: 0.5; opacity: 0.55;">
+                            <div style="font-size: 0.85em; opacity: 0.75;">
 
                                 <p id="demo3-a">
                                 </p>
@@ -356,7 +358,7 @@
 
                         <p>Sorry if you are having issues with the website. Technical help is always available through
                             the following email:<br>
-                        <h1>support@bell.ninja</h1><br>
+                        <h1>jack@lecturehat.com</h1><br>
                         Alternatively, you may also create a support ticket at <a href='https://panicstudy.com/contact'
                             target='_blank'>Panic Study. (Clickable)</a></p>
 
@@ -385,7 +387,7 @@
                             <br>
                             <i>Have a question that is not listed here? Here's a support email. Please allow 1-2 days
                                 for a response.</i>
-                        <h3>support@bell.ninja</h3>
+                        <h3>jack@lecturehat.com</h3>
                         </p>
                     </div>
                 </div>
@@ -393,15 +395,20 @@
                 <div data-panel="panel-3">
                     <div>
 
-                        <h3>Mobile Device Compatability</h3>
+                        <h3>Mobile Device Compatibility</h3>
 
-                        <p>Bell Ninja is now optimised for use with Windows tablets such as Microsoft's Surface Pro. You
-                            could use a smart phone to access the website, but be sure to maintain a level of tolerance.
-                            There may be visualization bugs and even functionality bugs.
+                        <p>Bell Ninja works on phones, tablets and laptops, in whatever browser you
+                            already use &mdash; Safari, Chrome, Edge or Firefox.
                             <br>
                             <br>
-                            Safari is the least compatible browser for Bell Ninja. IOS devices using Safari, such as
-                            iPhones, iPads, and Macs tend to not work with Bell Ninja.
+                            iPhones, iPads and Macs are fully supported. The countdown used to show
+                            &ldquo;aN&rdquo; on those devices because it built its target time in a
+                            format only Chrome would read; it is built from plain numbers now, which
+                            every browser handles the same way.
+                            <br>
+                            <br>
+                            If something still looks wrong on your device, please email me &mdash; it
+                            is a bug, not something you have to put up with.
                             <br>
                             <br>
                         </p>
@@ -462,7 +469,7 @@
     <script src="https://code.jquery.com/jquery-3.5.1.js"
         integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc=" crossorigin="anonymous"></script>
 
-    <script src='https://bell.ninja/bell-hs.js'></script>
+    <script src='bell-hs.js'></script>
 
     <script>
 
@@ -471,14 +478,9 @@
             return false;
         }
 
-        var ua = navigator.userAgent.toLowerCase();
-        if (ua.indexOf('safari') != -1) {
-            if (ua.indexOf('chrome') > -1) {
-                console.log("Yay, you're using Chrome! :)");
-            } else {
-                alert("Hey there! Safari is known to not work with Bell Ninja very well. Please use this website on your tablet with Google Chrome. Thankss!") // Safari
-            }
-        }
+        // Bell Ninja used to throw a modal at every Safari visitor telling them
+        // to go and use Chrome. The countdown is engine-agnostic now, so there
+        // is nothing left to warn about.
 
 
 

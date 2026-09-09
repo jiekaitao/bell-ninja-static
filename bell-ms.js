@@ -1,6 +1,52 @@
+/*
+ * ---------------------------------------------------------------------------
+ * bellTargetTime -- cross-browser countdown target
+ * ---------------------------------------------------------------------------
+ * The countdown used to build its target time like this:
+ *
+ *     today = mm + ' ' + dd + ', ' + yyyy + ' ';
+ *     new Date(today + " " + timel);       // -> "09 09, 2026  15:30:00"
+ *
+ * V8 (Chrome, Edge) happily parses that non-standard shape. JavaScriptCore --
+ * the engine behind Safari, and on iOS behind *every* browser including
+ * Chrome and Firefox -- returns Invalid Date for it. Every number downstream
+ * then became NaN and the clock rendered as "aN : aN : aN", which is the
+ * whole reason Bell Ninja never worked on iPhones, iPads or Macs.
+ *
+ * The numeric Date constructor is the only form every engine is required to
+ * support, so the target is built from numbers and never parsed from a string.
+ *
+ * bell-hs.js and bell-ms.js are each loaded on their own, and together on the
+ * dark-mode page, so the definition is guarded: whichever file loads first
+ * installs it and the second one leaves it alone.
+ */
+var bellTargetTime = bellTargetTime || function (timeString, from) {
+    var now = from ? new Date(from.getTime()) : new Date();
+    var parts = String(timeString).split(':');
 
-function regularSchedule(timex) {
-    if (timex >= 1.00 && timex < 8.00) {
+    var h = parseInt(parts[0], 10);
+    var m = parseInt(parts[1], 10);
+    var s = parseInt(parts[2], 10);
+    if (isNaN(h)) { h = 0; }
+    if (isNaN(m)) { m = 0; }
+    if (isNaN(s)) { s = 0; }
+
+    // Hour 24 is used to mean "end of today"; the numeric constructor rolls
+    // that over to midnight tomorrow on its own.
+    var target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, s, 0);
+
+    // A target that has already gone by belongs to tomorrow. Without this the
+    // clock counts backwards whenever a period boundary is a moment behind us.
+    if (target.getTime() <= now.getTime()) {
+        target = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, h, m, s, 0);
+    }
+
+    return target;
+};
+
+
+function regularScheduleMiddleSchool(timex) {
+    if (timex >= 0.00 && timex < 8.00) {
         period = "Good Morning! School Starts in..."
         bmessage = "Early Bird Until 8:00"
         timel = "8:00:00";
@@ -96,12 +142,12 @@ function regularSchedule(timex) {
         period = "Optional Tutorial"
         timel = "15:30:00";
         classis = false;
-    } else if (timex >= 15.30 && timex <= 17.00) {
+    } else if (timex >= 15.30 && timex < 17.00) {
         bmessage = "The library *MAY BE* open until 5:00 PM"
         period = "Have a great rest of your day! Library Closes in..."
         timel = "17:00:00";
         classis = false;
-    } else if (timex >= 17.01 && timex <= 24.59) {
+    } else if (timex >= 17.00 && timex <= 24.59) {
         period = "Have a great rest of your day!"
         timel = "24:00:00";
         classis = false;
@@ -113,7 +159,7 @@ function regularSchedule(timex) {
 };
 
 function EvenBlock(timex) {
-    if (timex >= 1.00 && timex < 8.00) {
+    if (timex >= 0.00 && timex < 8.00) {
         period = "Good Morning! School Starts in..."
         bmessage = "Early Bird Until 8:00"
         timel = "8:00:00";
@@ -173,12 +219,12 @@ function EvenBlock(timex) {
         period = "Period 8"
         timel = "14:45:00";
         classis = false;
-    } else if (timex >= 14.45 && timex <= 17.00) {
+    } else if (timex >= 14.45 && timex < 17.00) {
         bmessage = "The library *MAY BE* open until 5:00 PM"
         period = "Have a great rest of your day! Library Closes in..."
         timel = "17:00:00";
         classis = false;
-    } else if (timex >= 17.01 && timex <= 24.59) {
+    } else if (timex >= 17.00 && timex <= 24.59) {
         period = "Have a great rest of your day!"
         timel = "24:00:00";
         classis = false;
@@ -190,7 +236,7 @@ function EvenBlock(timex) {
 };
 
 function OddBlock(timex) {
-    if (timex >= 1.00 && timex < 8.00) {
+    if (timex >= 0.00 && timex < 8.00) {
         period = "Good Morning! School Starts in..."
         bmessage = "Early Bird Until 8:00"
         timel = "8:00:00";
@@ -255,12 +301,12 @@ function OddBlock(timex) {
         period = "Optional Tutorial"
         timel = "15:30:00";
         classis = false;
-    } else if (timex >= 15.30 && timex <= 17.00) {
+    } else if (timex >= 15.30 && timex < 17.00) {
         bmessage = "The library *MAY BE* open until 5:00 PM"
         period = "Have a great rest of your day! Library Closes in..."
         timel = "17:00:00";
         classis = false;
-    } else if (timex >= 17.01 && timex <= 24.59) {
+    } else if (timex >= 17.00 && timex <= 24.59) {
         period = "Have a great rest of your day!"
         timel = "24:00:00";
         classis = false;
@@ -273,7 +319,7 @@ function OddBlock(timex) {
 
 
 function AssemblySchedule(timex) {
-    if (timex >= 1.00 && timex < 8.00) {
+    if (timex >= 0.00 && timex < 8.00) {
         period = "Good Morning! School Starts in..."
         bmessage = "Early Bird Until 8:00"
         timel = "8:00:00";
@@ -373,12 +419,12 @@ function AssemblySchedule(timex) {
         period = "Tutorial"
         timel = "15:30:00";
         classis = false;
-    } else if (timex >= 15.30 && timex <= 17.00) {
+    } else if (timex >= 15.30 && timex < 17.00) {
         bmessage = "The library *MAY BE* open until 5:00 PM"
         period = "Have a great rest of your day! Library Closes in..."
         timel = "17:00:00";
         classis = false;
-    } else if (timex >= 17.01 && timex <= 24.59) {
+    } else if (timex >= 17.00 && timex <= 24.59) {
         period = "Have a great rest of your day!"
         timel = "24:00:00";
         classis = false;
@@ -391,7 +437,7 @@ function AssemblySchedule(timex) {
 
 function GradeMeetingScheduleMiddleSchool(timex)
 {
-    if (timex >= 1.00 && timex < 8.00) {
+    if (timex >= 0.00 && timex < 8.00) {
         period = "Good Morning! School Starts in..."
         bmessage = "Early Bird Until 8:00"
         timel = "8:00:00";
@@ -482,12 +528,12 @@ function GradeMeetingScheduleMiddleSchool(timex)
         period = "Tutorial"
         timel = "15:15:00";
         classis = false;
-    } else if (timex >= 15.15 && timex <= 17.00) {
+    } else if (timex >= 15.15 && timex < 17.00) {
         bmessage = "The library *MAY BE* open until 5:00 PM"
         period = "Have a great rest of your day! Library Closes in..."
         timel = "17:00:00";
         classis = false;
-    } else if (timex >= 17.01 && timex <= 24.59) {
+    } else if (timex >= 17.00 && timex <= 24.59) {
         period = "Have a great rest of your day!"
         timel = "24:00:00";
         classis = false;
@@ -500,7 +546,7 @@ function GradeMeetingScheduleMiddleSchool(timex)
 
 function tentativePSATSchedule()
 {
-    if (timex >= 1.00 && timex < 8.00) {
+    if (timex >= 0.00 && timex < 8.00) {
         period = "Good Morning! School Starts in..."
         bmessage = "Early Bird Until 8:00"
         timel = "8:00:00";
@@ -571,12 +617,12 @@ function tentativePSATSchedule()
         period = "Period 8"
         timel = "12:00:00";
         classis = false;
-    } else if (timex >= 12.00 && timex <= 17.00) {
+    } else if (timex >= 12.00 && timex < 17.00) {
         bmessage = "The library *MAY BE* open until 5:00 PM"
         period = "Have a great rest of your day! Library Closes in..."
         timel = "17:00:00";
         classis = false;
-    } else if (timex >= 17.01 && timex <= 24.59) {
+    } else if (timex >= 17.00 && timex <= 24.59) {
         period = "Have a great rest of your day!"
         timel = "24:00:00";
         classis = false;
@@ -621,7 +667,7 @@ function scheduleB() {
 
         if (n == 1) {
             dayweek = "Monday :("
-            regularSchedule(timex);
+            regularScheduleMiddleSchool(timex);
         }
 
         ///// Tuesday (Odd Block)
@@ -675,14 +721,8 @@ function scheduleB() {
     //timel = "15:20:00";
     ////////////////
 
-    var today = new Date();
-    var dd = String(today.getDate()).padStart(2, '0');
-    var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
-    var yyyy = today.getFullYear();
-
-    today = mm + ' ' + dd + ', ' + yyyy + ' ';
-    var countDownDate = new Date(today + " " + timel).getTime();
-    //var countDownDate = new Date(today + " 14:35:20").getTime();
+    // Built from numbers rather than a hand-made string -- see bellTargetTime().
+    var countDownDate = bellTargetTime(timel).getTime();
     var x = setInterval;
 
     // Get today's date and time
@@ -722,11 +762,13 @@ function scheduleB() {
 
 
 
-    temphour = hours * 60;
-    combinedvar = minutes + temphour;
-    tempmath = combinedvar * 60;
-    nonseconds = temphour + tempmath;
-    finalseconds = seconds + nonseconds;
+    // Seconds left until the next bell.
+    //
+    // This used to be built up as `hours*60 + (minutes + hours*60)*60`, which
+    // counts the hours twice: once correctly and once again in minutes. The
+    // clock ran up to 23 minutes long, and the bell sound -- which is fired
+    // from this same number -- rang that late too.
+    finalseconds = Math.max(0, Math.floor(distance / 1000));
     window.xsec = finalseconds;
 
 
@@ -736,7 +778,10 @@ function scheduleB() {
 
 
     function getTimeRemaining(endtime) {
-        var t = Date.parse(endtime) - Date.parse(new Date());
+        // endtime is already a Date. Round-tripping it back through
+        // Date.parse() re-parses toString() output, which is lossy and
+        // engine-dependent -- another thing Safari disagreed with V8 about.
+        var t = endtime.getTime() - Date.now();
         var seconds = Math.floor((t / 1000) % 60);
         var minutes = Math.floor((t / 1000 / 60) % 60);
         var hours = Math.floor((t / (1000 * 60 * 60)) % 24);
@@ -777,13 +822,12 @@ function scheduleB() {
     }
 
     // Last number is mili seconds
-    deadline = new Date(Date.parse(new Date()) + 1 * 1 * 1 * xsec * 1000);
+    deadline = new Date(Date.now() + xsec * 1000);
     initializeClock('clockdiv2', deadline);
 
     function checknull() {
         if (distance == 0) {
             getsch();
-            Program.restart();
             window.location.reload();
         };
 
@@ -795,7 +839,15 @@ function scheduleB() {
     var x = document.getElementById("bell");
 
     function playAudio() {
-        x.play();
+        // iOS refuses to play audio that no user gesture started, and rejects
+        // the play() promise. Left unhandled that rejection tears down the
+        // timer callback it was fired from, so the countdown stops.
+        try {
+            var played = x && x.play();
+            if (played && typeof played.catch === 'function') {
+                played.catch(function () { /* muted by the browser: fine */ });
+            }
+        } catch (err) { /* no audio element on this page: fine */ }
     }
 
     function pauseAudio() {
