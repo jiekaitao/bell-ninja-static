@@ -61,11 +61,11 @@
         <div class="bl-main" id="bl-main">
             <section onclick="scheduleA()">
                 <div class="bl-box">
-                    <h2>High School Schedule</h2>
+                    <h2>School Schedule</h2>
                 </div>
 
                 <div class="bl-content">
-                    <h2>Class Schedule (HS) <p id="demo-a"></p>
+                    <h2>Class Schedule <p id="demo-a"></p>
                     </h2>
 
                     <p>Here is a quick preview. Please be sure that you've selected the correct schedule. If you found a
@@ -206,154 +206,13 @@
             </section>
 
 
-            <section onclick="scheduleB()">
-                <div class="bl-box">
-                    <h2>Middle School Schedule</h2>
-                </div>
-
-                <div class="bl-content">
-                    <h2>Class Schedule (MS) <p id="demo-b"></p>
-                    </h2>
-
-                    <p>Here is a quick preview. Please be sure that you've selected the correct schedule. If you found a
-                        mistake in the schedule, please use the contact form to report the error. Thank you.</p>
-                    <br>
-                    WARNING! The website will play a digital "bell" noise. If you do not want this, please mute the page
-                    tab!
-                    <br>
-                    <br>
-                    <h1>Schedule Clock (Time until next bell ring)
-                    </h1>
-                    <div class="flip-box">
-                        <div class="flip-box-inner">
-                            <div class="flip-box-front">
-                                <div id="clockdiv2">
-                                    <div>
-                                        <span class="daysB">
-                                        </span>
-                                        <div class="smalltext">Days
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <span class="hoursB">
-                                        </span>
-                                        <div class="smalltext">Hours
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <span class="minutesB">
-                                        </span>
-                                        <div class="smalltext">Minutes
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <span class="secondsB">
-                                        </span>
-                                        <div class="smalltext">Seconds
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <br>
-                            <br>
-
-                            <div style="font-size: 0.85em; opacity: 0.75;">
-
-                                <p id="demo3-b">
-                                </p>
-                                <p id="demo4-b" style='margin-top: -80px;'>
-                                </p>
-                                <p id="demo2-b" style='visibility: hidden;'>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <br>
-                    <br>
-
-
-
-
-
-
-
-                    <!--p id="sadface2" style="font-size: 15px; color: brown;"></p>
-                    <p id="happyface2" style="font-size: 10px; color: gray;"></p>
-
-                    <div style="opacity: 1.0;" id="wrapfabtest">
-                        
-
-
-                        <script type="text/javascript">
-                            amzn_assoc_placement = "adunit0";
-                            amzn_assoc_tracking_id = "wrpc0c-20";
-                            amzn_assoc_ad_mode = "search";
-                            amzn_assoc_ad_type = "smart";
-                            amzn_assoc_marketplace = "amazon";
-                            amzn_assoc_region = "US";
-                            amzn_assoc_default_search_phrase = "riviera puppy dog";
-                            amzn_assoc_default_category = "All";
-                            amzn_assoc_linkid = "9327cf1a0cf8fc834c6da896fd2ae7ef";
-                            amzn_assoc_search_bar = "true";
-                            amzn_assoc_search_bar_position = "top";
-                            amzn_assoc_title = "Shop Related Products";
-                            </script>
-                            <script src="//z-na.amazon-adsystem.com/widgets/onejs?MarketPlace=US"></script>
-
-
-
-
-                    </div>
-
-                    <p id="sadface2" style="font-size: 15px; color: brown;"></p>
-                    <p id="happyface2" style="font-size: 10px; color: gray;"></p>
-                    <script
-                            src="https://code.jquery.com/jquery-3.4.1.js"
-                            integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU="
-                            crossorigin="anonymous"></script>
-                    <script>
-                    $(document).ready(function(){
-                        if($("#wrapfabtest").height() > 0) {
-                            document.getElementById("happyface2").innerHTML = "Thanks for being an ad supporter!";
-                            $.ajax({  
-                        type: 'POST',  
-                        url: 'null',
-                        data: { adblock: 'false' },
-                        success: function(data) {
-                    
-                        }
-                    });
-                            
-                        } else {
-                            document.getElementById("sadface2").innerHTML = "Hi user! This website costs exactly $8.51 USD per month to run. <br>Running ads helps cover the cost of keeping this online. Please consider <br>disabling AdBlocker on this website. Thank you :)<br><br><br>";
-                            $.ajax({  
-                        type: 'POST',  
-                        url: 'null',
-                        data: { adblock: 'true' },
-                        success: function(data) {
-                    
-                        }
-                    });
-                        
-                        }
-                    });
-                    </script>
-                    </center-->
-
-
-
-
-
-
-
-                    <br>
-                    <br>
-                    <br>
-                    <span class="bl-icon-close" style='opacity: 0.85;'><i class="fa fa-times fa-3x"
-                            aria-hidden="true"></i></span>
-                </div>
-            </section>
+            <!-- The separate Middle School panel used to run its own block
+                 schedule from bell-ms.js. Riviera Preparatory publishes one
+                 bell grid for grades 6-12 (its lunch waves cover 6th-7th,
+                 8th-9th and 10th-12th), so the two panels showed the same
+                 school two different ways. Consolidated into the single
+                 School Schedule panel above; bell-ms.js is archived under
+                 old-schedules/. -->
 
 
             <section>
@@ -589,7 +448,8 @@
     </div>
 </div><!-- /container -->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-<script src="js/boxlayout.js"></script>
+<!-- Boxlayout is defined inline further down this page; the separate
+     js/boxlayout.js does not exist and only ever 404ed. -->
 <script>
     $(function () {
         Boxlayout.init();
@@ -621,7 +481,6 @@
         integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc=" crossorigin="anonymous"></script>
 
     <script src='../bell-hs.js'></script>
-    <script src='../bell-ms.js'></script>
 
     <script>
         function openLunch() {

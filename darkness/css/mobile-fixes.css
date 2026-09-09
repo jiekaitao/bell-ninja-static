@@ -45,4 +45,37 @@
     .row {
         max-width: 100%;
     }
+
+    /* The legacy countdown (#clockdiv on classtime / old-days / schedule-b)
+       lays four ~100px blocks in a row, which overflows a phone and clips the
+       Minutes and Seconds off the end. These pages declare #clockdiv in an
+       inline <style> further down the document, so the selectors here are
+       qualified with html to outrank it without !important. */
+    html #clockdiv {
+        display: -webkit-box;
+        display: -webkit-flex;
+        display: flex;
+        -webkit-flex-wrap: wrap;
+        flex-wrap: wrap;
+        -webkit-justify-content: center;
+        justify-content: center;
+        width: 100%;
+        font-size: 1.6em;
+    }
+
+    html #clockdiv > div {
+        -webkit-flex: 1 1 68px;
+        flex: 1 1 68px;
+        margin: 3px;
+        padding: 6px 2px;
+    }
+
+    html #clockdiv div > span {
+        display: block;
+        padding: 14px 2px;
+    }
+
+    html .smalltext {
+        font-size: 12px;
+    }
 }

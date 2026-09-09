@@ -51,9 +51,12 @@ const PAGES = [
     'darkness/index-special.html'
 ].filter((p) => fs.existsSync(path.join(ROOT, p)));
 
+/* One schedule script drives the whole site. bell-ms.js ran a second, older
+ * block schedule for a "Middle School" panel; Riviera Preparatory publishes a
+ * single bell grid for grades 6-12, so that panel was consolidated away and
+ * the script is archived under old-schedules/. */
 const SCHEDULE_SCRIPTS = [
-    { file: 'bell-hs.js', entry: 'scheduleA', clock: 'clockdiv1', suffix: 'A', demo: 'demo-a', published: true },
-    { file: 'bell-ms.js', entry: 'scheduleB', clock: 'clockdiv2', suffix: 'B', demo: 'demo-b' }
+    { file: 'bell-hs.js', entry: 'scheduleA', clock: 'clockdiv1', suffix: 'A', demo: 'demo-a', published: true }
 ];
 
 /* ------------------------------------------------------------------ *
@@ -134,18 +137,43 @@ if (!hasJsc) {
     });
 }
 
-check('JSC / Safari', 'co-loaded schedule scripts do not clobber each other', () => {
-    /* darkness/index.html loads bell-hs.js and bell-ms.js into the same global
-     * scope. Any name they share means whichever loads last silently wins, so
-     * one of the two clocks runs on the wrong school's schedule. */
-    const names = SCHEDULE_SCRIPTS.map((spec) => {
-        const decls = stripComments(read(spec.file)).match(/^function\s+([A-Za-z_$][\w$]*)/gm) || [];
-        return new Set(decls.map((d) => d.replace(/^function\s+/, '')));
-    });
-    const shared = [...names[0]].filter((n) => names[1].has(n));
+check('JSC / Safari', 'schedule state stays out of the global scope', () => {
+    /* period, bmessage, timel and the countdown target used to be written
+     * without `var`, so they lived on window. When the dark-mode page loaded a
+     * second schedule script the two clocks shared one set of variables and
+     * each displayed the other one's period. Keeping the state private is what
+     * makes a second script safe to add back. */
+    const ctx = vm.createContext({});
+    vm.runInContext(read('tests/lib/shim.js'), ctx, { filename: 'shim.js' });
+    vm.runInContext(read('tests/lib/core-suite.js'), ctx, { filename: 'core-suite.js' });
+    vm.runInContext('BellTest.installAll(this);', ctx);
+    vm.runInContext(read('bell-hs.js'), ctx, { filename: 'bell-hs.js' });
+    const leaked = JSON.parse(vm.runInContext(`(function () {
+        scheduleA();
+        var names = ['period', 'bmessage', 'timel', 'classis', 'timex', 'dayweek',
+                     'distance', 'deadline', 'audio', 'finalseconds', 'timeoutx'];
+        return JSON.stringify(names.filter(function (n) { return n in this; }, this));
+    }).call(this)`, ctx));
     return {
-        ok: shared.length === 0,
-        detail: shared.length ? 'both define: ' + shared.join(', ') : 'no shared global function names'
+        ok: leaked.length === 0,
+        detail: leaked.length ? 'leaked to global: ' + leaked.join(', ') : 'all schedule state is module-private'
+    };
+});
+
+check('JSC / Safari', 'exactly one schedule script is shipped', () => {
+    /* Two scripts on one page is how the clobbering bug reached users. */
+    const referenced = new Set();
+    for (const page of PAGES) {
+        const live = read(page).replace(/<!--[\s\S]*?-->/g, ' ');
+        for (const m of live.matchAll(/<script[^>]*\ssrc=["']([^"']*bell[^"']*\.js)["']/gi)) {
+            referenced.add(path.basename(m[1]));
+        }
+    }
+    const names = [...referenced];
+    return {
+        ok: names.length <= 1,
+        detail: names.length <= 1 ? (names[0] || 'none') + ' drives every page'
+                                  : 'pages load ' + names.join(' and ')
     };
 });
 
@@ -268,6 +296,23 @@ for (const sheet of STYLESHEETS) {
         };
     });
 
+    check('Responsive CSS', sheet + ': the corner badge cannot widen the page', () => {
+        /* .slide-in-br starts at translate(1000px, 1000px). If the badge is
+         * absolutely positioned that offset is real document width, and the
+         * page can be swiped 1000px sideways while the animation runs. */
+        const slidesFromOffscreen = /slide-in-br/.test(css) && /translateX\(1000px\)/.test(css);
+        if (!slidesFromOffscreen) return { ok: true, detail: 'no off-screen slide-in' };
+        const pinned = /\.panicstudy\.(?:bottomright|topright)[^{]*\{[^}]*position\s*:\s*fixed/.test(css);
+        const disabledOnPhones = (css.match(/@media[^{]*max-width[^{]*\{[\s\S]*?\n\}/g) || [])
+            .some((b) => /\.slide-in-br[^{]*\{[^}]*animation\s*:\s*none/.test(b));
+        return {
+            ok: pinned && disabledOnPhones,
+            detail: (pinned ? '' : 'badge is not position:fixed; ') +
+                    (disabledOnPhones ? '' : 'slide-in not disabled on phones; ') ||
+                    'badge is fixed and the phone breakpoint drops the animation'
+        };
+    });
+
     check('Responsive CSS', sheet + ': viewport heights survive the iOS toolbars', () => {
         /* 100vh on iOS Safari is the height *without* the toolbars, so the
          * bottom of a 100vh box sits behind the address bar. */
@@ -327,11 +372,67 @@ check('No sideways scroll', 'css/mobile-fixes.css caps oversized embeds', () => 
     const css = read('css/mobile-fixes.css');
     const capsIframes = /iframe[^{]*\{[^}]*max-width\s*:\s*100%/.test(css);
     const fixesHeader = /main-header-area[^{]*\{[^}]*padding-left/.test(css);
+    /* The legacy #clockdiv puts four ~100px blocks in one row; on a phone the
+     * Minutes and Seconds fall off the end. */
+    const wrapsClock = /#clockdiv[^{]*\{[^}]*flex-wrap\s*:\s*wrap/.test(css);
     return {
-        ok: capsIframes && fixesHeader,
-        detail: (capsIframes ? '' : 'iframes uncapped; ') + (fixesHeader ? '' : 'header padding unfixed; ') || 'embeds and header handled'
+        ok: capsIframes && fixesHeader && wrapsClock,
+        detail: (capsIframes ? '' : 'iframes uncapped; ') + (fixesHeader ? '' : 'header padding unfixed; ') +
+                (wrapsClock ? '' : 'legacy clock does not wrap; ') || 'embeds, header and clock handled'
     };
 });
+
+/* ------------------------------------------------------------------ *
+ * 3c. Every local reference resolves to a file that exists
+ * ------------------------------------------------------------------ */
+function localRefs(src, pageDir) {
+    /* Comments hold years of archived markup; only live references matter. */
+    const live = src.replace(/<!--[\s\S]*?-->/g, ' ');
+    const refs = [];
+    const re = /(?:src|href)\s*=\s*(?:"([^"]+)"|'([^']+)')/g;
+    let m;
+    while ((m = re.exec(live)) !== null) {
+        const raw = (m[1] || m[2]).trim();
+        if (/^(?:https?:)?\/\/|^data:|^mailto:|^tel:|^#|^javascript:/i.test(raw)) continue;
+        const clean = raw.split('?')[0].split('#')[0];
+        if (!clean) continue;
+        const rel = clean.startsWith('/') ? clean.slice(1) : path.join(pageDir, clean);
+        refs.push({ raw, file: path.normalize(rel) });
+    }
+    return refs;
+}
+
+for (const page of PAGES) {
+    const src = read(page);
+    const pageDir = path.dirname(page);
+
+    check('Broken references', page + ': every local script exists', () => {
+        const scripts = (src.replace(/<!--[\s\S]*?-->/g, ' ').match(/<script[^>]*\ssrc=["'][^"']+["'][^>]*>/gi) || []);
+        const missing = [];
+        for (const tag of scripts) {
+            const raw = tag.match(/src=["']([^"']+)["']/i)[1].trim();
+            if (/^(?:https?:)?\/\/|^data:/i.test(raw)) continue;
+            const clean = raw.split('?')[0];
+            const rel = clean.startsWith('/') ? clean.slice(1) : path.join(pageDir, clean);
+            if (!fs.existsSync(path.join(ROOT, rel))) missing.push(raw);
+        }
+        return {
+            ok: missing.length === 0,
+            detail: missing.length ? 'missing: ' + missing.join(', ') : 'all scripts present'
+        };
+    });
+
+    check('Broken references', page + ': every local asset exists', () => {
+        const missing = [];
+        for (const ref of localRefs(src, pageDir)) {
+            if (!fs.existsSync(path.join(ROOT, ref.file))) missing.push(ref.raw);
+        }
+        return {
+            ok: missing.length === 0,
+            detail: missing.length ? 'missing: ' + [...new Set(missing)].slice(0, 4).join(', ') : 'all local assets present'
+        };
+    });
+}
 
 /* ------------------------------------------------------------------ *
  * 4. iOS interaction quirks

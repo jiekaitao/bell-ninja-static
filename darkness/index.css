@@ -653,6 +653,18 @@ height: 180px;
 width: auto;
 }
 
+/* The corner badge animates in from translate(1000px, 1000px). `.panicstudy`
+   is declared after `.bottomright`, so it quietly overrode position:fixed with
+   position:absolute -- and an absolutely positioned element sitting 1000px
+   past the right edge really does widen the document. For the 2.2s the
+   animation runs the page could be swiped a full 1000px sideways; on a phone
+   that pans away from the content, and iOS keeps the pan afterwards.
+   A fixed element never contributes to document width. */
+.panicstudy.bottomright,
+.panicstudy.topright {
+    position: fixed;
+}
+
 
 
 
@@ -1002,7 +1014,15 @@ font-size: 18px;
     }
 
     /* Corner badges cover the content on a narrow screen. */
-    .bottomright {
+    /* Decorative only, and its 1000px starting offset is exactly what let the
+       page be swiped sideways on load. Not worth it on a phone. */
+    .slide-in-br {
+        -webkit-animation: none;
+        animation: none;
+    }
+
+    .bottomright,
+    .panicstudy.bottomright {
         position: static;
     }
 

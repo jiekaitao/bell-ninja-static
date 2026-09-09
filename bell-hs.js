@@ -1,4 +1,36 @@
 /*
+ * ===========================================================================
+ * Everything below lives inside this function on purpose.
+ * ===========================================================================
+ * The schedule state -- period, bmessage, timel, the countdown target -- used
+ * to be written without `var`, which made all of it global. The dark-mode page
+ * loads bell-hs.js and bell-ms.js together, so the high school and middle
+ * school clocks shared one set of variables and overwrote each other on every
+ * tick: each one ended up displaying the other school's period and counting
+ * down to the other school's bell.
+ *
+ * Declaring the state here keeps each file's schedule to itself. Only the
+ * entry point is published, because index.html calls it from an onclick
+ * attribute.
+ *
+ * (The body is left un-indented so this stays a small, reviewable change
+ * against the original file.)
+ */
+(function () {
+
+var period,
+    bmessage,
+    timel,
+    classis,
+    timex,
+    dayweek,
+    distance,
+    deadline,
+    audio,
+    finalseconds,
+    timeoutx;
+
+/*
  * ---------------------------------------------------------------------------
  * bellTargetTime -- cross-browser countdown target
  * ---------------------------------------------------------------------------
@@ -43,6 +75,40 @@ var bellTargetTime = bellTargetTime || function (timeString, from) {
 
     return target;
 };
+
+/*
+ * The countdown markup exists in two generations. index.html and the dark-mode
+ * page use ids suffixed per clock ("demo-a", "clockdiv1", ".daysA"); the older
+ * pages -- classtime.html, old-days.html, schedule-b.html -- use the original
+ * unsuffixed names. They used to be served by a separate bell.js that is not
+ * in this repository, so their clocks had been dead.
+ *
+ * These helpers accept either spelling and return null instead of throwing
+ * when a page simply does not have one of the elements.
+ */
+var bellPick = bellPick || function (ids) {
+    for (var i = 0; i < ids.length; i++) {
+        var el = document.getElementById(ids[i]);
+        if (el) { return el; }
+    }
+    return null;
+};
+
+var bellSetText = bellSetText || function (ids, value) {
+    var el = bellPick(ids);
+    if (el) { el.innerHTML = value; }
+    return el;
+};
+
+var bellPickIn = bellPickIn || function (root, selectors) {
+    if (!root) { return null; }
+    for (var i = 0; i < selectors.length; i++) {
+        var el = root.querySelector(selectors[i]);
+        if (el) { return el; }
+    }
+    return null;
+};
+
 
 //alert("Hi! This schedule isa werong because twe can an acseembly!!");
 
@@ -291,6 +357,19 @@ function fridaySchedule(timex) {
 
 function scheduleA() {
 
+    /*
+     * This can be re-entered from three places: the panel's onclick, the bell
+     * alarm below, and the page-load hook at the bottom of the file. Each call
+     * used to leave the previous run's 1-second interval and bell alarm
+     * running, so the clock ticked several times a second and the bell could
+     * ring over itself.
+     */
+    if (window.bellTimersA) {
+        clearInterval(window.bellTimersA.clock);
+        clearTimeout(window.bellTimersA.bell);
+    }
+    window.bellTimersA = { clock: null, bell: null };
+
     audio = new Audio('./img/guitarbell.mp3');
 
     var d = new Date();
@@ -364,10 +443,13 @@ function scheduleA() {
     }
 
 
-    document.getElementById("demo-a").innerHTML = period;
-    document.getElementById("demo2-a").innerHTML = timex;
-    document.getElementById("demo3-a").innerHTML = dayweek;
-    document.getElementById("demo4-a").innerHTML = bmessage;
+    function renderScheduleText() {
+        bellSetText(["demo-a", "demo"], period);
+        bellSetText(["demo2-a", "demo2"], timex);
+        bellSetText(["demo3-a", "demo3"], dayweek);
+        bellSetText(["demo4-a", "demo4"], bmessage);
+    }
+    renderScheduleText();
 
     // Built from numbers rather than a hand-made string -- see bellTargetTime().
     var countDownDate = bellTargetTime(timel).getTime();
@@ -443,20 +525,23 @@ function scheduleA() {
         };
     }
 
-    function initializeClock(id, endtime) {
-        var clock = document.getElementById(id);
-        var daysSpan = clock.querySelector('.daysA');
-        var hoursSpan = clock.querySelector('.hoursA');
-        var minutesSpan = clock.querySelector('.minutesA');
-        var secondsSpan = clock.querySelector('.secondsA');
+    function initializeClock(endtime) {
+        var clock = bellPick(['clockdiv1', 'clockdiv']);
+        var daysSpan = bellPickIn(clock, ['.daysA', '.days']);
+        var hoursSpan = bellPickIn(clock, ['.hoursA', '.hours']);
+        var minutesSpan = bellPickIn(clock, ['.minutesA', '.minutes']);
+        var secondsSpan = bellPickIn(clock, ['.secondsA', '.seconds']);
 
         function updateClock() {
             var t = getTimeRemaining(endtime);
 
-            daysSpan.innerHTML = t.days;
-            hoursSpan.innerHTML = ('0' + t.hours).slice(-2);
-            minutesSpan.innerHTML = ('0' + t.minutes).slice(-2);
-            secondsSpan.innerHTML = ('0' + t.seconds).slice(-2);
+            // classtime.html shows the period name with no clock at all,
+            // so every one of these may legitimately be absent.
+            if (daysSpan) { daysSpan.innerHTML = t.days; }
+            if (hoursSpan) { hoursSpan.innerHTML = ('0' + t.hours).slice(-2); }
+            if (minutesSpan) { minutesSpan.innerHTML = ('0' + t.minutes).slice(-2); }
+            if (secondsSpan) { secondsSpan.innerHTML = ('0' + t.seconds).slice(-2); }
+            renderScheduleText();
 
             if (t.total <= 0) {
                 clearInterval(timeinterval);
@@ -467,11 +552,12 @@ function scheduleA() {
         checknull();
         updateClock();
         var timeinterval = setInterval(updateClock, 1000);
+        window.bellTimersA.clock = timeinterval;
     }
 
     // Last number is mili seconds
-    deadline = new Date(Date.now() + xsec * 1000);
-    initializeClock('clockdiv1', deadline);
+    deadline = new Date(Date.now() + finalseconds * 1000);
+    initializeClock(deadline);
 
     function checknull() {
         if (distance == 0) {
@@ -508,7 +594,7 @@ function scheduleA() {
 
     console.log('Starting alternate bell countdown for audio');
 
-    setTimeout(() => {
+    window.bellTimersA.bell = setTimeout(() => {
         const millis = Date.now() - start;
 
         console.log(`seconds elapsed = ${Math.floor(millis / 1000)}, playing bell`);
@@ -552,3 +638,38 @@ function scheduleA() {
 
 
 }
+
+
+/*
+ * index.html starts the clock when you tap the schedule panel. The older pages
+ * (classtime.html, old-days.html, schedule-b.html) have no such trigger -- they
+ * expected the missing bell.js to fill the clock in by itself. Start
+ * automatically whenever this page has the markup and nothing has started yet,
+ * which also means index.html's clock is already correct the moment the panel
+ * opens instead of a tick later.
+ */
+(function () {
+    function autostart() {
+        if (window.bellTimersA) { return; }          // already running
+        if (!bellPick(['clockdiv1', 'clockdiv', 'demo-a', 'demo'])) { return; }   // not this page
+        try {
+            scheduleA();
+        } catch (err) {
+            // A page with only part of the markup should not break the rest
+            // of its scripts.
+            if (window.console && console.warn) { console.warn('bell: ' + err); }
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', autostart);
+    } else {
+        autostart();
+    }
+})();
+
+
+// Published for the inline onclick="scheduleA()" handlers in the pages.
+window.scheduleA = scheduleA;
+
+})();
