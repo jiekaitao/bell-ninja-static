@@ -1,0 +1,43 @@
+/*
+ * Dark theme.
+ *
+ * This used to be darkness/index.css: a 1,117-line copy of ../index.css that
+ * differed in about seventy lines, and nearly every one of those was a
+ * background colour set to black. Two copies meant every layout fix had to be
+ * made twice and the two drifted apart. The dark page now loads ../index.css
+ * for the layout and this file for the palette.
+ */
+
+/* Panels, clock faces and the slide-up sheets are all black here. */
+.bl-main > section:first-child,
+.bl-main > section:nth-child(2),
+.bl-main > section:nth-child(3),
+.bl-main > section:nth-child(4),
+.bl-main > section:first-child.bl-expand,
+.bl-main > section:nth-child(2).bl-expand,
+.bl-main > section:nth-child(3).bl-expand,
+.bl-main > section:nth-child(4).bl-expand,
+div.bl-panel-items > div,
+#clockdiv1 > div,
+#clockdiv1 div > span,
+#clockdiv2 > div,
+#clockdiv2 div > span {
+    background: #000000;
+}
+
+/* Panel headings are not enlarged on this page. */
+.bl-box {
+    font-size: inherit;
+}
+
+/* The close control sits inside its own panel here rather than being pinned
+   to the window. Confined to wide screens: below 820px ../index.css puts the
+   control in the flow of the panel it closes, and this would undo that. */
+@media screen and (min-width: 821px) {
+    .bl-main > section .bl-icon-close {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        z-index: 100;
+    }
+}

@@ -150,7 +150,9 @@ check('JSC / Safari', 'schedule state stays out of the global scope', () => {
     vm.runInContext(read('bell-hs.js'), ctx, { filename: 'bell-hs.js' });
     const leaked = JSON.parse(vm.runInContext(`(function () {
         scheduleA();
-        var names = ['period', 'bmessage', 'timel', 'classis', 'timex', 'dayweek',
+        /* classis is deliberately published -- classtime.html reads it to
+           show its "Class is ongoing" notice. Everything else stays private. */
+        var names = ['period', 'bmessage', 'timel', 'timex', 'dayweek',
                      'distance', 'deadline', 'audio', 'finalseconds', 'timeoutx'];
         return JSON.stringify(names.filter(function (n) { return n in this; }, this));
     }).call(this)`, ctx));
@@ -182,8 +184,34 @@ check('JSC / Safari', 'exactly one schedule script is shipped', () => {
  * ------------------------------------------------------------------ */
 const VIEWPORT_RE = /<meta\s+name=["']viewport["']\s+content=["']([^"']*)["']\s*\/?>/i;
 
+/* Narrowest phone still in use; anything wider than this that is not
+ * capped by a max-width rule drags the page sideways. */
+const NARROWEST_PHONE = 320;
+
+function localRefs(src, pageDir) {
+    /* Comments hold years of archived markup; only live references matter. */
+    const live = src.replace(/<!--[\s\S]*?-->/g, ' ');
+    const refs = [];
+    const re = /(?:src|href)\s*=\s*(?:"([^"]+)"|'([^']+)')/g;
+    let m;
+    while ((m = re.exec(live)) !== null) {
+        const raw = (m[1] || m[2]).trim();
+        if (/^(?:https?:)?\/\/|^data:|^mailto:|^tel:|^#|^javascript:/i.test(raw)) continue;
+        const clean = raw.split('?')[0].split('#')[0];
+        if (!clean) continue;
+        const rel = clean.startsWith('/') ? clean.slice(1) : path.join(pageDir, clean);
+        refs.push({ raw, file: path.normalize(rel) });
+    }
+    return refs;
+}
+
+/* ------------------------------------------------------------------ *
+ * Per-page checks: mobile markup, sideways scroll, broken references.
+ * ------------------------------------------------------------------ */
 for (const page of PAGES) {
     const src = read(page);
+    const pageDir = path.dirname(page);
+
     check('Mobile markup', page + ': has a viewport meta', () => {
         const m = src.match(VIEWPORT_RE);
         if (!m) return { ok: false, detail: 'no <meta name="viewport"> -- iOS renders at 980px and zooms out' };
@@ -244,12 +272,72 @@ for (const page of PAGES) {
             detail: abs.length ? abs.slice(0, 3).join(' | ') : 'own scripts loaded relatively'
         };
     });
+
+    check('No sideways scroll', page + ': no embed wider than a phone', () => {
+        /* A hard-coded width on an <iframe> or <img> drags the whole document
+         * sideways; on a phone there is no scrollbar to show what ran off. */
+        const offenders = [];
+        const tags = src.match(/<(?:iframe|img|table|video|embed|object)\b[^>]*>/gi) || [];
+        for (const tag of tags) {
+            const attr = tag.match(/\swidth\s*=\s*["']?(\d+)(?:px)?["']?/i);
+            const style = tag.match(/style\s*=\s*["'][^"']*?\bwidth\s*:\s*(\d+)px/i);
+            const px = attr ? +attr[1] : (style ? +style[1] : 0);
+            if (px > NARROWEST_PHONE) offenders.push(px + 'px: ' + tag.slice(0, 60));
+        }
+        /* A stylesheet that caps every embed at the viewport width neutralises
+         * the attribute, so only flag pages that have no such guard. */
+        const guarded = /mobile-fixes\.css/.test(src) || /max-width\s*:\s*100%/.test(src);
+        return {
+            ok: offenders.length === 0 || guarded,
+            detail: offenders.length === 0
+                ? 'no oversized embeds'
+                : (guarded ? offenders.length + ' oversized embed(s), capped by a max-width rule'
+                           : offenders.slice(0, 3).join(' | '))
+        };
+    });
+
+    check('No sideways scroll', page + ': no desktop-only padding on the header', () => {
+        /* The bundled theme pads the sticky header by 200px a side, which is
+         * 400px of chrome before any content on a 390px screen. */
+        if (!/main-header-area/.test(src)) return { ok: true, detail: 'no themed header' };
+        const ok = /mobile-fixes\.css/.test(src);
+        return { ok, detail: ok ? 'mobile-fixes.css loaded' : 'themed header with no small-screen override' };
+    });
+
+    check('Broken references', page + ': every local script exists', () => {
+        const scripts = (src.replace(/<!--[\s\S]*?-->/g, ' ').match(/<script[^>]*\ssrc=["'][^"']+["'][^>]*>/gi) || []);
+        const missing = [];
+        for (const tag of scripts) {
+            const raw = tag.match(/src=["']([^"']+)["']/i)[1].trim();
+            if (/^(?:https?:)?\/\/|^data:/i.test(raw)) continue;
+            const clean = raw.split('?')[0];
+            const rel = clean.startsWith('/') ? clean.slice(1) : path.join(pageDir, clean);
+            if (!fs.existsSync(path.join(ROOT, rel))) missing.push(raw);
+        }
+        return {
+            ok: missing.length === 0,
+            detail: missing.length ? 'missing: ' + missing.join(', ') : 'all scripts present'
+        };
+    });
+
+    check('Broken references', page + ': every local asset exists', () => {
+        const missing = [];
+        for (const ref of localRefs(src, pageDir)) {
+            if (!fs.existsSync(path.join(ROOT, ref.file))) missing.push(ref.raw);
+        }
+        return {
+            ok: missing.length === 0,
+            detail: missing.length ? 'missing: ' + [...new Set(missing)].slice(0, 4).join(', ') : 'all local assets present'
+        };
+    });
 }
 
 /* ------------------------------------------------------------------ *
  * 3. Responsive + iOS CSS
  * ------------------------------------------------------------------ */
-const STYLESHEETS = ['index.css', 'darkness/index.css'].filter((p) => fs.existsSync(path.join(ROOT, p)));
+/* One layout stylesheet. The dark page layers darkness/dark.css over it for
+ * the palette rather than keeping a second full copy. */
+const STYLESHEETS = ['index.css'].filter((p) => fs.existsSync(path.join(ROOT, p)));
 
 for (const sheet of STYLESHEETS) {
     const css = read(sheet);
@@ -296,6 +384,20 @@ for (const sheet of STYLESHEETS) {
         };
     });
 
+    check('Responsive CSS', sheet + ': an expanded panel fits the window', () => {
+        /* .bl-main is 125% of the viewport by design. A panel expanded to
+         * 100% of that overflows the window by a quarter of its width, and
+         * html/body overflow:hidden means nobody can scroll to it. */
+        const strip = css.match(/\.bl-main\s*\{[^}]*width\s*:\s*([\d.]+)%/);
+        const expanded = css.match(/\.bl-main\s*>\s*section\.bl-expand\s*\{[^}]*width\s*:\s*([\d.]+)%/);
+        if (!strip || !expanded) return { ok: true, detail: 'layout does not use the 125% strip' };
+        const visible = (parseFloat(strip[1]) * parseFloat(expanded[1])) / 100;
+        return {
+            ok: Math.abs(visible - 100) < 0.5,
+            detail: 'expanded panel covers ' + visible.toFixed(1) + '% of the window'
+        };
+    });
+
     check('Responsive CSS', sheet + ': the corner badge cannot widen the page', () => {
         /* .slide-in-br starts at translate(1000px, 1000px). If the badge is
          * absolutely positioned that offset is real document width, and the
@@ -328,42 +430,7 @@ for (const sheet of STYLESHEETS) {
 /* ------------------------------------------------------------------ *
  * 3b. Fixed pixel widths that cannot fit a phone
  * ------------------------------------------------------------------ */
-const NARROWEST_PHONE = 320;   /* iPhone SE / older Android */
 
-for (const page of PAGES) {
-    const src = read(page);
-
-    check('No sideways scroll', page + ': no embed wider than a phone', () => {
-        /* A hard-coded width on an <iframe> or <img> drags the whole document
-         * sideways; on a phone there is no scrollbar to show what ran off. */
-        const offenders = [];
-        const tags = src.match(/<(?:iframe|img|table|video|embed|object)\b[^>]*>/gi) || [];
-        for (const tag of tags) {
-            const attr = tag.match(/\swidth\s*=\s*["']?(\d+)(?:px)?["']?/i);
-            const style = tag.match(/style\s*=\s*["'][^"']*?\bwidth\s*:\s*(\d+)px/i);
-            const px = attr ? +attr[1] : (style ? +style[1] : 0);
-            if (px > NARROWEST_PHONE) offenders.push(px + 'px: ' + tag.slice(0, 60));
-        }
-        /* A stylesheet that caps every embed at the viewport width neutralises
-         * the attribute, so only flag pages that have no such guard. */
-        const guarded = /mobile-fixes\.css/.test(src) || /max-width\s*:\s*100%/.test(src);
-        return {
-            ok: offenders.length === 0 || guarded,
-            detail: offenders.length === 0
-                ? 'no oversized embeds'
-                : (guarded ? offenders.length + ' oversized embed(s), capped by a max-width rule'
-                           : offenders.slice(0, 3).join(' | '))
-        };
-    });
-
-    check('No sideways scroll', page + ': no desktop-only padding on the header', () => {
-        /* The bundled theme pads the sticky header by 200px a side, which is
-         * 400px of chrome before any content on a 390px screen. */
-        if (!/main-header-area/.test(src)) return { ok: true, detail: 'no themed header' };
-        const ok = /mobile-fixes\.css/.test(src);
-        return { ok, detail: ok ? 'mobile-fixes.css loaded' : 'themed header with no small-screen override' };
-    });
-}
 
 check('No sideways scroll', 'css/mobile-fixes.css caps oversized embeds', () => {
     if (!fs.existsSync(path.join(ROOT, 'css/mobile-fixes.css'))) {
@@ -385,54 +452,24 @@ check('No sideways scroll', 'css/mobile-fixes.css caps oversized embeds', () => 
 /* ------------------------------------------------------------------ *
  * 3c. Every local reference resolves to a file that exists
  * ------------------------------------------------------------------ */
-function localRefs(src, pageDir) {
-    /* Comments hold years of archived markup; only live references matter. */
-    const live = src.replace(/<!--[\s\S]*?-->/g, ' ');
-    const refs = [];
-    const re = /(?:src|href)\s*=\s*(?:"([^"]+)"|'([^']+)')/g;
-    let m;
-    while ((m = re.exec(live)) !== null) {
-        const raw = (m[1] || m[2]).trim();
-        if (/^(?:https?:)?\/\/|^data:|^mailto:|^tel:|^#|^javascript:/i.test(raw)) continue;
-        const clean = raw.split('?')[0].split('#')[0];
-        if (!clean) continue;
-        const rel = clean.startsWith('/') ? clean.slice(1) : path.join(pageDir, clean);
-        refs.push({ raw, file: path.normalize(rel) });
-    }
-    return refs;
-}
 
-for (const page of PAGES) {
-    const src = read(page);
-    const pageDir = path.dirname(page);
 
-    check('Broken references', page + ': every local script exists', () => {
-        const scripts = (src.replace(/<!--[\s\S]*?-->/g, ' ').match(/<script[^>]*\ssrc=["'][^"']+["'][^>]*>/gi) || []);
-        const missing = [];
-        for (const tag of scripts) {
-            const raw = tag.match(/src=["']([^"']+)["']/i)[1].trim();
-            if (/^(?:https?:)?\/\/|^data:/i.test(raw)) continue;
-            const clean = raw.split('?')[0];
-            const rel = clean.startsWith('/') ? clean.slice(1) : path.join(pageDir, clean);
-            if (!fs.existsSync(path.join(ROOT, rel))) missing.push(raw);
-        }
-        return {
-            ok: missing.length === 0,
-            detail: missing.length ? 'missing: ' + missing.join(', ') : 'all scripts present'
-        };
-    });
-
-    check('Broken references', page + ': every local asset exists', () => {
-        const missing = [];
-        for (const ref of localRefs(src, pageDir)) {
-            if (!fs.existsSync(path.join(ROOT, ref.file))) missing.push(ref.raw);
-        }
-        return {
-            ok: missing.length === 0,
-            detail: missing.length ? 'missing: ' + [...new Set(missing)].slice(0, 4).join(', ') : 'all local assets present'
-        };
-    });
-}
+check('Responsive CSS', 'the dark theme is a palette layer, not a second copy', () => {
+    /* darkness/index.css was a 1,117-line duplicate of index.css differing in
+     * ~70 lines, nearly all of them a background colour. Every layout fix had
+     * to be made twice, and the two drifted. */
+    const dark = 'darkness/dark.css';
+    if (!fs.existsSync(path.join(ROOT, dark))) return { ok: false, detail: dark + ' is missing' };
+    const lines = read(dark).split('\n').length;
+    const base = read('index.css').split('\n').length;
+    const page = read('darkness/index.html');
+    const layered = /href=["']\.\.\/index\.css["']/.test(page) && /href=["']dark\.css["']/.test(page);
+    return {
+        ok: layered && lines < base / 4,
+        detail: layered ? dark + ' is ' + lines + ' lines over ' + base + ' shared'
+                        : 'darkness/index.html does not layer ../index.css + dark.css'
+    };
+});
 
 /* ------------------------------------------------------------------ *
  * 4. iOS interaction quirks

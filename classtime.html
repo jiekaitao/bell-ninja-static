@@ -702,9 +702,12 @@ display: block;
 </div>
 
 <script>
-if (classis == true) {
-  on();
-}
+// The schedule publishes window.classis once it has run, which is on load --
+// after this inline script. Waiting for the load event is what makes this
+// notice work at all; read at parse time it was always a ReferenceError.
+window.addEventListener('load', function () {
+  if (window.classis) { on(); }
+});
 function on() {
   document.getElementById("overlay").style.display = "block";
 }

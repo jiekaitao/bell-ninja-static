@@ -37,7 +37,10 @@ rather than silently passing.
   standards mode (no content ahead of the DOCTYPE), no unitless CSS lengths,
   no Safari-blocking modal, scripts loaded by relative path.
 - **Responsive CSS** — a phone breakpoint exists, the panel layout stacks, the
-  page can actually scroll on a touch device, and `100vh` has an iOS fallback.
+  page can actually scroll on a touch device, `100vh` has an iOS fallback, an
+  expanded panel is exactly window-width, the corner badge cannot widen the
+  page, and the dark theme stays a palette layer over the one shared
+  stylesheet rather than a second copy of it.
 - **No sideways scroll** — no embed wider than a 320px phone without a
   `max-width` guard; themed pages load `css/mobile-fixes.css`.
 - **Broken references** — every local `src`/`href` resolves to a file that is

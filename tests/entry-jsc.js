@@ -5,8 +5,8 @@
  *   jsc -e "var TARGET='bell-hs.js'; var ENTRY='scheduleA'; var CLOCK='clockdiv1';
  *            var SUFFIX='A'; var DEMO='demo-a'; load('tests/entry-jsc.js');"
  *
- * Each script gets its own jsc process because bell-hs.js and bell-ms.js both
- * define a global `regularSchedule` and would clobber each other.
+ * jsc is Safari's engine, so this is the only way to catch the Date-parsing
+ * differences that broke the site on iPhones without an actual iPhone.
  */
 load('tests/lib/shim.js');
 load('tests/lib/core-suite.js');

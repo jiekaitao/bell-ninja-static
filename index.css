@@ -66,14 +66,19 @@ a:hover {
 
 .bl-main {
     position: absolute;
-    width: 125%;
+    /* Was 125%, with four 20%-wide panels covering the first 80% of it and a
+       quarter of the strip hanging off-screen. Panels expanded to 100% of that
+       strip, which is how a quarter of every expanded panel -- the last
+       support tile, the close control -- ended up unreachable behind
+       overflow:hidden. One window, four quarters, nothing off the edge. */
+    width: 100%;
     height: 100%;
     overflow: hidden;
 }
 
 .bl-main > section {
     position: absolute;
-    width: 20%;
+    width: 25%;
     height: 100%;
 }
 
@@ -85,19 +90,19 @@ a:hover {
 
 .bl-main > section:nth-child(2) {
     top: 0;
-    left: 20%;
+    left: 25%;
     background: #FA987D;
 }
 
 .bl-main > section:nth-child(3) {
     top: 0;
-    left: 40%;
+    left: 50%;
     background: #72CCA7;
 }
 
 .bl-main > section:nth-child(4) {
     top: 0%;
-    left: 60%;
+    left: 75%;
     background: #10A296;
 }
 
@@ -397,6 +402,7 @@ div.bl-panel-items > div.bl-hide-current-work {
 }
 
 .bl-main > section.bl-expand {
+    /* The strip is exactly the window, so an expanded panel is too. */
     width: 100%;
     height: 100%;
     top: 0;
@@ -471,6 +477,55 @@ section.bl-expand .bl-box {
     -webkit-transition: opacity 0.3s linear 0.5s;
     -moz-transition: opacity 0.3s linear 0.5s;
     transition: opacity 0.3s linear 0.5s;
+}
+
+
+/* Support tiles ("Contact", "Wrong time", "Mobile", "Not loading").
+   These were centred by hand with an inline margin-left percentage on every
+   icon and every caption -- 38.5%, 31%, 25.5%, and so on. Percentages of a
+   width that changes, so they only lined up at one window size and the last
+   tile slid off the right edge at any other. Centre them properly and let the
+   row wrap instead. */
+#bl-work-items {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-flex-wrap: wrap;
+    flex-wrap: wrap;
+    -webkit-justify-content: center;
+    justify-content: center;
+    list-style: none;
+    margin: 24px 0 0;
+    padding: 0;
+}
+
+#bl-work-items > li {
+    -webkit-flex: 1 1 170px;
+    flex: 1 1 170px;
+    max-width: 260px;
+    width: auto;
+    margin: 8px;
+    text-align: center;
+}
+
+#bl-work-items > li a {
+    display: block;
+    padding: 20px 8px;
+    border: 1px solid rgba(255, 255, 255, 0.45);
+}
+
+#bl-work-items > li b {
+    display: block;
+    margin-top: 4px;
+}
+
+/* The close control was pinned 170px in from the right at 96px tall, which on
+   a wide window lands on top of the panel's own heading and on a narrow one
+   is off-screen entirely. */
+.bl-main > section .bl-icon-close {
+    top: 20px;
+    right: 24px;
+    font-size: 44px;
 }
 
 @media screen and (max-width: 46.5em) {
@@ -1005,12 +1060,6 @@ font-size: 18px;
         font-size: 1em;
     }
 
-    /* Thumbnails in the Misc. list: three per row is unreadable on a phone. */
-    .bl-content > ul li {
-        width: 46%;
-        margin: 2%;
-    }
-
     /* Corner badges cover the content on a narrow screen. */
     /* Decorative only, and its 1000px starting offset is exactly what let the
        page be swiped sideways on load. Not worth it on a phone. */
@@ -1029,15 +1078,7 @@ font-size: 18px;
         max-width: 45%;
     }
 
-    /* One panel is plain markup rather than .bl-content, and carries an inline
-       overflow:hidden that clips long words -- an email address, in practice --
-       on a narrow screen. Inline styles can only be beaten with !important. */
-    .bl-main > section[style] {
-        overflow: visible !important;
-        margin-left: 0 !important;
-        margin-right: 0 !important;
-    }
-
+    /* One panel is plain markup rather than .bl-content. */
     .bl-main > section > span:not(.bl-icon-close) {
         display: block;
         margin-right: 0 !important;
