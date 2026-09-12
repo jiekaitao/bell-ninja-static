@@ -320,6 +320,16 @@ for (const page of PAGES) {
         };
     });
 
+    check('Mobile markup', page + ': Escape closes what is open', () => {
+        /* Anything that opens over the page needs a keyboard way out; on a
+         * phone the close control can be the only way back and it is easy to
+         * miss. */
+        const opensSomething = /bl-icon-close|id="id01"/.test(src);
+        if (!opensSomething) return { ok: true, detail: 'nothing opens over the page' };
+        const wired = /escape-to-close\.js/.test(src);
+        return { ok: wired, detail: wired ? 'escape-to-close.js loaded' : 'no Escape handler' };
+    });
+
     check('Broken references', page + ': every local asset exists', () => {
         const missing = [];
         for (const ref of localRefs(src, pageDir)) {
