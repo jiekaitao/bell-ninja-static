@@ -57,3 +57,19 @@ rather than silently passing.
 - `tests/lib/shim.js` — minimal DOM, clock control, recorded timers
 - `tests/lib/core-suite.js` — the behavioural assertions (engine-agnostic)
 - `tests/entry-jsc.js` — loads the above inside `jsc`
+
+## Releasing
+
+GitHub Pages serves every file with `Cache-Control: max-age=600` and gives you
+no way to change that, so a returning visitor can run stale CSS/JS against
+fresh HTML. Before committing a change you want people to get straight away:
+
+```sh
+node tools/release.js
+```
+
+It stamps `?v=<timestamp>` onto every same-origin `.css`/`.js` reference (a URL
+the browser has never seen cannot come from cache) and writes the same stamp to
+`version.txt`. `js/check-for-updates.js` polls that file every five minutes and
+reloads once when it changes, so tabs left open all day pick up a deploy on
+their own. A test fails if the stamps and `version.txt` drift apart.

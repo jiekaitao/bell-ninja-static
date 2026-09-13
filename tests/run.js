@@ -473,11 +473,53 @@ check('Responsive CSS', 'the dark theme is a palette layer, not a second copy', 
     const lines = read(dark).split('\n').length;
     const base = read('index.css').split('\n').length;
     const page = read('darkness/index.html');
-    const layered = /href=["']\.\.\/index\.css["']/.test(page) && /href=["']dark\.css["']/.test(page);
+    /* (?:\?v=[^"']*)? -- tools/release.js appends a cache-busting stamp. */
+    const layered = /href=["']\.\.\/index\.css(?:\?v=[^"']*)?["']/.test(page) &&
+                    /href=["']dark\.css(?:\?v=[^"']*)?["']/.test(page);
     return {
         ok: layered && lines < base / 4,
         detail: layered ? dark + ' is ' + lines + ' lines over ' + base + ' shared'
                         : 'darkness/index.html does not layer ../index.css + dark.css'
+    };
+});
+
+check('Cache busting', 'every page is stamped with the current version', () => {
+    /* GitHub Pages serves everything with Cache-Control: max-age=600 and does
+     * not let you change it, so a returning visitor can run stale CSS/JS
+     * against fresh HTML. The ?v= stamp changes the URL, which is the only
+     * lever we have. Re-run `node tools/release.js` before committing. */
+    const versionFile = path.join(ROOT, 'version.txt');
+    if (!fs.existsSync(versionFile)) return { ok: false, detail: 'version.txt is missing -- run node tools/release.js' };
+    const current = fs.readFileSync(versionFile, 'utf8').trim();
+
+    const stale = [];
+    for (const page of PAGES) {
+        const live = read(page).replace(/<!--[\s\S]*?-->/g, ' ');
+        const own = live.match(/\s(?:src|href)\s*=\s*["'](?!https?:|\/\/|data:)[^"']+?\.(?:css|js)(?:\?v=[^"']*)?["']/gi) || [];
+        for (const ref of own) {
+            const stamp = ref.match(/\?v=([^"']*)/);
+            if (!stamp || stamp[1] !== current) { stale.push(page + ': ' + ref.trim().slice(0, 48)); break; }
+        }
+    }
+    return {
+        ok: stale.length === 0,
+        detail: stale.length ? stale.slice(0, 3).join(' | ') + '  (run: node tools/release.js)'
+                             : 'all pages at v=' + current
+    };
+});
+
+check('Cache busting', 'the update check can tell which version it is running', () => {
+    /* js/check-for-updates.js reads its own ?v= stamp rather than a constant
+     * someone has to remember to bump. If it ships unstamped it silently does
+     * nothing. */
+    const script = 'js/check-for-updates.js';
+    if (!fs.existsSync(path.join(ROOT, script))) return { ok: false, detail: script + ' is missing' };
+    const usesOwnStamp = /[?&]v=/.test(read(script)) && /version\.txt/.test(read(script));
+    const noStore = /cache:\s*['"]no-store['"]/.test(read(script));
+    return {
+        ok: usesOwnStamp && noStore,
+        detail: (usesOwnStamp ? '' : 'does not read its own stamp; ') +
+                (noStore ? '' : 'version.txt fetch is cacheable; ') || 'polls version.txt uncached'
     };
 });
 
