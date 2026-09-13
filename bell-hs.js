@@ -143,6 +143,67 @@ function readSchedule(now) {
     };
 }
 
+
+/* ------------------------------------------------------------------ *
+ * Today's bells, listed
+ *
+ * Built from the same table the countdown reads, so the printed list and the
+ * clock can never disagree. Intermissions are left out and the before/after
+ * school rows skipped, which is how the schedule is published.
+ * ------------------------------------------------------------------ */
+
+var SCHOOL_STARTS = toMinutes('08:00');
+var SCHOOL_ENDS = toMinutes('15:30');
+
+/* Rows that are not a scheduled block. The printed schedule lists neither the
+   intermissions between periods nor, on Wednesdays, the 3:00 slot where the
+   optional tutorial would otherwise be -- so neither belongs in the list. */
+var NOT_A_BELL = /^(Class Intermission|School's out)/;
+
+function listedRows(rows) {
+    var listed = [];
+    for (var i = 0; i < rows.length; i++) {
+        var startsAt = i === 0 ? 0 : toMinutes(rows[i - 1][0]);
+        var endsAt = toMinutes(rows[i][0]);
+        if (NOT_A_BELL.test(rows[i][1])) { continue; }
+        if (startsAt < SCHOOL_STARTS || endsAt > SCHOOL_ENDS) { continue; }
+        listed.push({ startsAt: startsAt, endsAt: endsAt, label: rows[i][1] });
+    }
+    return listed;
+}
+
+function renderDayList(now, current) {
+    var host = document.getElementById('today-schedule');
+    if (!host) { return; }
+
+    var rows = listedRows(DAYS[now.getDay()].rows);
+    host.innerHTML = '';
+
+    var heading = document.createElement('h3');
+    heading.textContent = rows.length ? "Today's bells" : 'No classes today';
+    host.appendChild(heading);
+    if (!rows.length) { return; }
+
+    var list = document.createElement('ol');
+    for (var i = 0; i < rows.length; i++) {
+        var item = document.createElement('li');
+        if (rows[i].label === current.period) { item.className = 'now'; }
+
+        var when = document.createElement('span');
+        when.className = 'when';
+        when.textContent = clockLabel(rows[i].startsAt) + '\u2013' + clockLabel(rows[i].endsAt);
+
+        var what = document.createElement('span');
+        what.className = 'what';
+        what.textContent = rows[i].label;
+
+        item.appendChild(when);
+        item.appendChild(what);
+        list.appendChild(item);
+    }
+    host.appendChild(list);
+}
+
 /* ------------------------------------------------------------------ *
  * The page
  *
@@ -228,12 +289,14 @@ function start() {
      * second and the bell rings over itself. */
     if (ticker) { clearInterval(ticker); }
 
-    var current = readSchedule(new Date());
+    var now = new Date();
+    var current = readSchedule(now);
     window.classis = current.inClass;
 
     write(['demo-a', 'demo'], current.period);
     write(['demo3-a', 'demo3'], current.day);
     write(['demo4-a', 'demo4'], current.caption);
+    renderDayList(now, current);
 
     function tick() {
         var left = Math.round((current.target.getTime() - Date.now()) / 1000);
