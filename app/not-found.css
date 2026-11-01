@@ -1,0 +1,40 @@
+.not-found {
+  min-height: 100dvh;
+  padding-top: 10vh;
+  background: #282828;
+  text-align: center;
+}
+
+.not-found p {
+  margin: 0 0 30px;
+  font-size: min(130px, 14vw);
+  letter-spacing: 5px;
+  background-color: #000;
+  color: transparent;
+  text-shadow: 2px 2px 3px rgba(255, 255, 255, 0.1);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.not-found p span { font-size: 1.2em; }
+
+.not-found code {
+  display: block;
+  margin: 0 30px 25px;
+  color: #bdbdbd;
+  font-size: 16px;
+}
+
+.not-found code span { color: #f0c674; }
+.not-found code i { color: #b5bd68; }
+.not-found code em { color: #b294bb; font-style: normal; }
+.not-found code b { color: #81a2be; font-weight: 500; }
+
+.not-found a {
+  display: inline-block;
+  margin-top: 10px;
+  color: #8abeb7;
+  font-family: monospace;
+  font-size: 20px;
+  text-decoration: underline;
+}

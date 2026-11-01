@@ -1,0 +1,26 @@
+{
+  "name": "bell-ninja",
+  "version": "2.0.0",
+  "private": true,
+  "description": "A simple answer to a constant question. When is the class bell going to ring?",
+  "scripts": {
+    "dev": "next dev -p 3100",
+    "prebuild": "node scripts/stamp-version.mjs",
+    "build": "next build",
+    "preview": "node scripts/preview.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "node tests/run.mjs",
+    "test:site": "node tests/site.mjs"
+  },
+  "dependencies": {
+    "next": "^16.4.3",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "typescript": "^7.0.2"
+  }
+}
