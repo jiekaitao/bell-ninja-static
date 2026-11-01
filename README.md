@@ -25,6 +25,8 @@ Pushing to `main` tests, builds and deploys through
 | The bell schedule | `lib/schedule.ts` |
 | A holiday, finals or half day | `lib/special-days.ts` |
 | Help text | `components/HelpSheet.tsx` |
+| Reporting a wrong schedule | `components/ReportSheet.tsx` |
+| The Help Wanted sticky note | `components/HelpWantedNote.tsx` |
 | About text | `components/AboutSheet.tsx` |
 | Legendary Ninjas | `app/legends/page.tsx` |
 | Colors and layout | `app/globals.css` |
@@ -33,9 +35,13 @@ Pushing to `main` tests, builds and deploys through
 
 - `lib/` holds the logic. `schedule.ts`, `special-days.ts` and `feedback.ts` never
   touch the page, so they can run under both JavaScript engines in the tests.
-- `components/Board.tsx` is the home page.
+- `components/Board.tsx` is the home page. The ninja in `components/NinjaTab.tsx`
+  slides today's schedule out from the right.
 - Sheets are `<dialog>` elements addressed by the URL hash: `#help`,
-  `#help/wrong-time`, `#about`.
+  `#help/wrong-time`, `#about`, `#report`.
+- Schedule reports have no backend. The link on the page, the occasional survey
+  and Help all lead to `#report`, which opens an email draft on the visitor's
+  device. Survey answers aren't recorded anywhere.
 - The dark theme is a set of token overrides at the top of `app/globals.css`. Old
   `/darkness` links switch it on.
 - Every build stamps `version.txt`. Open tabs poll it and reload themselves when

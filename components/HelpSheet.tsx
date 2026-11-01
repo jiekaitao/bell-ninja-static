@@ -30,8 +30,9 @@ const TOPICS: { id: string; label: string; title: string; icon: ReactNode; body:
       <>
         <p>
           In some cases, an incorrect entry can happen when a new schedule is inputted. If the schedule
-          is ringing 5-15 minutes off, please alert me by emailing the address below.
+          is ringing 5-15 minutes off, please let me know:
         </p>
+        <p><button type="button" className="step-button" onClick={() => openRoute('#report')}>Schedule not correct?</button></p>
         <p>
           Bell Ninja calculates the difference between your time and the time of the next bell ring. In
           some rare cases, if your device time is wrong, the countdown timer will be wrong. Check if your

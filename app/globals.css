@@ -146,13 +146,17 @@ p {
 
 .board {
   display: grid;
-  grid-template-columns: minmax(0, 1.75fr) minmax(300px, 1fr);
   grid-template-rows: minmax(0, 1fr) clamp(104px, 17dvh, 156px);
-  grid-template-areas:
-    'hero bells'
-    'tiles tiles';
   height: 100dvh;
   min-height: 600px;
+}
+
+.board-top {
+  --schedule-width: clamp(320px, 30vw, 430px);
+  position: relative;
+  display: flex;
+  min-height: 0;
+  overflow: hidden;
 }
 
 /* ------------------------------------------------------------------ *
@@ -160,11 +164,14 @@ p {
  * ------------------------------------------------------------------ */
 
 .hero {
-  grid-area: hero;
+  position: relative;
+  flex: 1 1 0;
   display: flex;
   flex-direction: column;
   gap: clamp(12px, 2dvh, 22px);
+  min-width: 0;
   min-height: 0;
+  container-type: inline-size;
   padding: clamp(20px, 3.4vw, 48px);
   overflow-y: auto;
   background: var(--hero-bg);
@@ -183,6 +190,7 @@ p {
   font-weight: 700;
   letter-spacing: 0.2em;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .hero-controls {
@@ -230,7 +238,7 @@ p {
 
 .hero h1 {
   max-width: 22ch;
-  font-size: clamp(2.1rem, 4.5vw, 4.4rem);
+  font-size: clamp(2.1rem, 6cqw, 5.2rem);
   font-weight: 300;
   line-height: 1.08;
   letter-spacing: -0.01em;
@@ -250,7 +258,7 @@ p {
 }
 
 .clock-unit {
-  flex: 0 1 clamp(100px, 13.5vw, 190px);
+  flex: 0 1 clamp(100px, 18cqw, 250px);
   padding: clamp(6px, 0.7vw, 10px);
   border-radius: 12px;
   background: var(--clock-well);
@@ -263,7 +271,7 @@ p {
   border-radius: 8px;
   background: var(--clock-face);
   color: var(--clock-ink);
-  font-size: clamp(3rem, 7.6vw, 6.5rem);
+  font-size: clamp(3rem, min(10.5cqw, 17dvh), 9rem);
   font-weight: 300;
   line-height: 1;
   font-variant-numeric: tabular-nums;
@@ -299,14 +307,97 @@ p {
   font-size: 1rem;
 }
 
-.mistake {
-  font-size: 0.82rem;
-  line-height: 1.4;
+.report-link {
+  align-self: flex-start;
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 0.92rem;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
-.mistake a {
-  font-weight: 700;
-  white-space: nowrap;
+/* ------------------------------------------------------------------ *
+ * The sticky note
+ * ------------------------------------------------------------------ */
+
+.help-note {
+  position: absolute;
+  right: 150px;
+  bottom: 26px;
+  width: 236px;
+  padding: 20px 16px 14px;
+  background: linear-gradient(170deg, #fff0a0, #ffe680);
+  color: #3a2f1a;
+  font-size: 0.84rem;
+  line-height: 1.35;
+  box-shadow: 2px 8px 16px rgba(0, 0, 0, 0.28);
+  transform: rotate(-2.5deg);
+  transition:
+    opacity 0.28s ease,
+    transform 0.34s cubic-bezier(0.3, 1.3, 0.6, 1),
+    visibility 0s;
+  animation: note-in 0.5s ease-out 0.95s backwards;
+}
+
+/* A strip of tape holding it up. */
+.help-note::before {
+  content: '';
+  position: absolute;
+  top: -9px;
+  left: 50%;
+  width: 74px;
+  height: 20px;
+  margin-left: -37px;
+  background: rgba(255, 255, 255, 0.48);
+  transform: rotate(1.5deg);
+}
+
+.help-note h2 {
+  margin-bottom: 6px;
+  color: #b4232a;
+  font-size: 1.4rem;
+  font-weight: 400;
+  line-height: 1.1;
+}
+
+.help-note-aside {
+  margin-top: 6px;
+  font-size: 0.76rem;
+}
+
+.help-note a {
+  display: block;
+  margin-top: 8px;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.help-note-hidden,
+.hero:has(.feedback) .help-note {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(14px) rotate(3deg) scale(0.92);
+  transition:
+    opacity 0.22s ease,
+    transform 0.26s ease-in,
+    visibility 0s linear 0.26s;
+}
+
+/* Only where there's room to spare beside the countdown. */
+@media (min-width: 900px) and (max-width: 1099px), (min-width: 900px) and (max-height: 639px) {
+  .help-note {
+    display: none;
+  }
+}
+
+@keyframes note-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) rotate(3deg) scale(0.92);
+  }
 }
 
 /* ------------------------------------------------------------------ *
@@ -324,12 +415,6 @@ p {
 
 .feedback h3 {
   font-size: 1.05rem;
-}
-
-.feedback p {
-  margin-top: 8px;
-  font-size: 0.92rem;
-  line-height: 1.45;
 }
 
 .feedback-actions {
@@ -353,49 +438,61 @@ p {
   text-decoration: none;
 }
 
-.feedback details {
-  margin-top: 10px;
-  font-size: 0.92rem;
-}
-
-.feedback summary {
-  cursor: pointer;
-}
-
-.feedback label {
-  display: block;
-  margin-top: 8px;
-  font-weight: 700;
-}
-
-.feedback textarea {
-  display: block;
-  width: 100%;
-  margin-top: 4px;
-  padding: 8px;
-  border: 1px solid var(--feedback-line);
-  border-radius: 8px;
-  background: var(--feedback-button);
-  color: inherit;
-  font: inherit;
-  resize: vertical;
-}
-
 /* ------------------------------------------------------------------ *
  * Today's bells
  * ------------------------------------------------------------------ */
 
+.schedule {
+  position: relative;
+  z-index: 2;
+  flex: none;
+  width: 0;
+  transition: width 0.38s cubic-bezier(0.22, 0.9, 0.3, 1);
+}
+
+.schedule-open {
+  width: var(--schedule-width);
+}
+
+.schedule-clip {
+  height: 100%;
+  overflow: hidden;
+}
+
 .bells {
-  grid-area: bells;
-  min-height: 0;
-  padding: clamp(20px, 2.6vw, 36px) clamp(16px, 2.2vw, 30px);
+  width: var(--schedule-width);
+  height: 100%;
+  padding: clamp(16px, 2vw, 28px) clamp(16px, 2.2vw, 30px);
   overflow-y: auto;
   background: var(--bells-bg);
   color: var(--bells-ink);
 }
 
+.bells-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.bells-close {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  font-size: 1.7rem;
+  line-height: 1;
+}
+
+.bells-close:hover {
+  background: var(--bells-rule);
+}
+
 .bells h2 {
-  margin-bottom: 14px;
   color: var(--bells-dim);
   font-size: 0.85rem;
   font-weight: 700;
@@ -441,16 +538,200 @@ p {
 }
 
 .bells-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  text-align: center;
+  margin-top: 14px;
+  font-size: 1.1rem;
 }
 
-.bells-empty h2 {
-  margin: 0;
+/* ------------------------------------------------------------------ *
+ * The ninja who guards the schedule
+ * ------------------------------------------------------------------ */
+
+.ninja-tab {
+  position: absolute;
+  top: 50%;
+  right: 100%;
+  z-index: 2;
+  padding: 0 8px 0 0;
+  border: 0;
+  background: none;
+  translate: 0 -50%;
+  animation: ninja-enter 0.7s cubic-bezier(0.22, 1.2, 0.36, 1) 0.45s backwards;
+}
+
+.ninja-tab:focus-visible {
+  outline-offset: -2px;
+}
+
+.ninja-art {
+  display: block;
+  width: 118px;
+  height: auto;
+  font-family: inherit;
+  overflow: visible;
+  transform-origin: 100% 50%;
+  transition: transform 0.28s cubic-bezier(0.34, 1.7, 0.64, 1);
+}
+
+.ninja-face-calm,
+.ninja-face-happy {
+  transition: opacity 0.15s;
+}
+
+.ninja-face-happy {
+  opacity: 0;
+}
+
+.ninja-eyes {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ninja-blink 5.5s infinite;
+}
+
+.ninja-arrow {
+  transform-box: fill-box;
+}
+
+.ninja-sign {
+  transform-box: fill-box;
+  transform-origin: 50% 0;
+  transition: opacity 0.18s, transform 0.3s ease-in;
+}
+
+/* Waiting at its sides until the sign drops. Origins are the shoulders, in the
+   drawing's own coordinates. */
+.ninja-arm {
+  opacity: 0;
+  transform-box: view-box;
+  transition: opacity 0.1s, transform 0.2s ease-in;
+}
+
+.ninja-arm-high {
+  transform-origin: 110px 112px;
+  transform: rotate(95deg) scale(0.7);
+}
+
+.ninja-arm-low {
+  transform-origin: 70px 114px;
+  transform: rotate(50deg) scale(0.7);
+}
+
+.ninja-sparkle {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(0) rotate(-40deg);
+  transition: opacity 0.1s, transform 0.15s ease-in;
+}
+
+.ninja-head {
+  transform-box: view-box;
+  transform-origin: 90px 100px;
+  transition: transform 0.35s cubic-bezier(0.34, 1.7, 0.64, 1);
+}
+
+.ninja-figure {
+  transform-box: view-box;
+  transform-origin: 90px 174px;
+}
+
+.ninja-tab-open .ninja-figure {
+  animation: ninja-hop 0.5s ease-out 0.1s;
+}
+
+.ninja-tab-open .ninja-head {
+  transform: rotate(7deg);
+}
+
+.ninja-tab-open .ninja-sign {
+  opacity: 0;
+  transform: translateY(46px) rotate(-16deg) scale(0.75);
+  transition: opacity 0.22s 0.08s, transform 0.3s ease-in;
+}
+
+.ninja-tab-open .ninja-arm {
+  opacity: 1;
+  transform: none;
+  transition: opacity 0.1s 0.14s, transform 0.42s cubic-bezier(0.34, 1.9, 0.64, 1) 0.14s;
+}
+
+.ninja-tab-open .ninja-arm-low {
+  transition-delay: 0.2s;
+}
+
+.ninja-tab-open .ninja-sparkle {
+  opacity: 1;
+  transform: none;
+  transition: opacity 0.1s 0.3s, transform 0.4s cubic-bezier(0.34, 2.4, 0.64, 1) 0.3s;
+}
+
+.ninja-tab-open .ninja-sparkle:nth-last-child(2) {
+  transition-delay: 0.38s;
+}
+
+.ninja-tab-open .ninja-sparkle:last-child {
+  transition-delay: 0.46s;
+}
+
+.ninja-tab-open .ninja-face-calm {
+  opacity: 0;
+}
+
+.ninja-tab-open .ninja-face-happy {
+  opacity: 1;
+}
+
+@media (hover: hover) {
+  .ninja-tab:hover .ninja-art,
+  .ninja-tab:focus-visible .ninja-art {
+    transform: scale(1.5);
+  }
+
+  .ninja-tab:hover .ninja-face-calm,
+  .ninja-tab:focus-visible .ninja-face-calm {
+    opacity: 0;
+  }
+
+  .ninja-tab:hover .ninja-face-happy,
+  .ninja-tab:focus-visible .ninja-face-happy {
+    opacity: 1;
+  }
+
+  .ninja-tab:not(.ninja-tab-open):hover .ninja-sign,
+  .ninja-tab:not(.ninja-tab-open):focus-visible .ninja-sign {
+    animation: ninja-wiggle 0.55s ease-in-out;
+  }
+
+  .ninja-tab:not(.ninja-tab-open):hover .ninja-arrow,
+  .ninja-tab:not(.ninja-tab-open):focus-visible .ninja-arrow {
+    animation: ninja-point 0.7s ease-in-out infinite;
+  }
+}
+
+.ninja-tab:active .ninja-art {
+  transform: scale(1.25);
+}
+
+@keyframes ninja-enter {
+  from { transform: translateX(130%); }
+}
+
+@keyframes ninja-blink {
+  0%, 93%, 100% { transform: scaleY(1); }
+  96% { transform: scaleY(0.1); }
+}
+
+@keyframes ninja-hop {
+  40% { transform: translateY(-16px) scale(1.04, 0.97); }
+  70% { transform: translateY(0) scale(0.97, 1.03); }
+}
+
+@keyframes ninja-point {
+  50% { transform: translateX(5px); }
+}
+
+@keyframes ninja-wiggle {
+  25% { transform: rotate(-4deg); }
+  60% { transform: rotate(3deg); }
 }
 
 /* ------------------------------------------------------------------ *
@@ -458,7 +739,6 @@ p {
  * ------------------------------------------------------------------ */
 
 .tiles {
-  grid-area: tiles;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   min-height: 0;
@@ -520,13 +800,53 @@ p {
   font-weight: 700;
 }
 
+/* Waits out of sight past the tile's bottom-right corner. Hovering springs it
+   up from below; leaving flings it off to the right from wherever it has got
+   to, so a quick pass of the cursor animates too.
+
+   The wrapper carries the fling and the image carries the rise. Two elements
+   give each motion its own timing in each direction, which is what lets it
+   arrive one way and leave another. Transitions rather than keyframes, because
+   they can be interrupted and reversed at any point. It sits outside the
+   layout, so LUNCH stays put either way. */
 .tile-hamster {
-  flex: none;
+  position: absolute;
+  top: 0;
+  right: clamp(10px, 2.5vw, 34px);
+  bottom: 0;
   width: clamp(64px, 7.5vw, 104px);
   height: clamp(64px, 7.5vw, 104px);
+  margin-block: auto;
+  pointer-events: none;
+  transform: translateX(280%) rotate(32deg);
+  transform-origin: 50% 100%;
+  transition: transform 0.4s cubic-bezier(0.5, 0, 0.9, 0.4);
+}
+
+.tile-hamster img {
+  display: block;
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
   object-fit: cover;
   object-position: 68% 60%;
+  transform: translateY(150%);
+  /* Stays level while the wrapper flies off, then resets out of sight. */
+  transition: transform 0s linear 0.4s;
+}
+
+@media (hover: hover) {
+  .tile-lunch:hover .tile-hamster,
+  .tile-lunch:focus-visible .tile-hamster {
+    transform: none;
+    transition: transform 0.5s cubic-bezier(0.3, 1.5, 0.6, 1);
+  }
+
+  .tile-lunch:hover .tile-hamster img,
+  .tile-lunch:focus-visible .tile-hamster img {
+    transform: none;
+    transition: transform 0.5s cubic-bezier(0.34, 1.6, 0.64, 1);
+  }
 }
 
 /* A black ninja needs a little moonlight on a black page. */
@@ -566,6 +886,11 @@ p {
 .sheet-about {
   background: var(--sheet-about-bg);
   color: var(--sheet-about-ink);
+}
+
+.sheet-report {
+  background: var(--feedback-bg);
+  color: var(--feedback-ink);
 }
 
 .sheet-frame {
@@ -648,6 +973,121 @@ p {
   letter-spacing: 0.3em;
   text-align: center;
   text-transform: uppercase;
+}
+
+.steps {
+  margin: 22px 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+.steps li {
+  position: relative;
+  padding: 0 0 22px 52px;
+  counter-increment: step;
+}
+
+.steps li::before {
+  content: counter(step);
+  position: absolute;
+  top: -2px;
+  left: 0;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--coral);
+  color: var(--cream);
+  font-weight: 900;
+}
+
+/* The line that joins one step to the next. */
+.steps li:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 38px;
+  bottom: 2px;
+  left: 17px;
+  width: 2px;
+  background: var(--feedback-line);
+}
+
+.steps h3 {
+  font-size: 1.1rem;
+  line-height: 1.5;
+}
+
+.steps p {
+  margin-top: 2px;
+}
+
+.step-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  margin-top: 12px;
+}
+
+.step-button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--coral);
+  color: var(--cream);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.step-button:hover {
+  background: var(--coral-deep);
+}
+
+.step-copy {
+  min-height: 36px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 0.92rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.step-fallback {
+  font-size: 0.92rem;
+}
+
+.step-fallback summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.step-fallback p {
+  margin-top: 8px;
+}
+
+.step-fallback label {
+  display: block;
+  margin-top: 8px;
+  font-weight: 700;
+}
+
+.step-fallback textarea {
+  display: block;
+  width: 100%;
+  margin: 4px 0 8px;
+  padding: 8px;
+  border: 1px solid var(--feedback-line);
+  border-radius: 8px;
+  background: var(--feedback-button);
+  color: inherit;
+  font: inherit;
+  resize: vertical;
 }
 
 .topic {
@@ -793,8 +1233,12 @@ p {
     min-height: 100dvh;
   }
 
+  .board-top {
+    --schedule-width: 100vw;
+    flex: 1 0 auto;
+  }
+
   .hero {
-    flex: none;
     overflow: visible;
     padding: 16px;
     gap: 14px;
@@ -812,10 +1256,51 @@ p {
     font-size: clamp(2.8rem, 15vw, 5.5rem);
   }
 
+  .schedule {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+  }
+
+  /* Pinned just above the tiles, so nothing on the page can push it behind
+     them. The open drawer has its own × button. */
+  .ninja-tab {
+    position: fixed;
+    top: auto;
+    right: 0;
+    bottom: calc(76px + env(safe-area-inset-bottom));
+    translate: none;
+  }
+
+  .ninja-tab-open {
+    display: none;
+  }
+
+  .help-note {
+    right: auto;
+    bottom: 18px;
+    left: 16px;
+    width: min(58vw, 236px);
+  }
+
+  /* Floats over the page instead of making it taller. */
+  .feedback {
+    position: fixed;
+    right: 12px;
+    bottom: calc(84px + env(safe-area-inset-bottom));
+    left: 12px;
+    z-index: 4;
+    max-width: none;
+    box-shadow: 0 6px 22px rgba(0, 0, 0, 0.3);
+  }
+
+  .ninja-art {
+    width: 96px;
+  }
+
   .bells {
-    flex: 1 0 auto;
-    overflow: visible;
-    padding: 20px 16px 28px;
+    padding: 14px 16px 24px;
   }
 
   .when {
@@ -875,11 +1360,26 @@ p {
   }
 }
 
+/* Short phones need every pixel for the countdown. */
+@media (max-width: 899px) and (max-height: 779px) {
+  .help-note {
+    display: none;
+  }
+}
+
+/* The narrowest phones keep the day on one line; the icon says the rest. */
+@media (max-width: 360px) {
+  .control span {
+    display: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
 }

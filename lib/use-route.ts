@@ -2,11 +2,11 @@
 
 import { useMemo, useSyncExternalStore } from 'react';
 
-/* Sheets live in the URL hash: #help, #help/wrong-time, #about. That makes them
+/* Sheets live in the URL hash: #help, #help/wrong-time, #about, #report. That makes them
    linkable, and the phone's Back button closes them. */
 
 export interface Route {
-  sheet: 'help' | 'about' | null;
+  sheet: 'help' | 'about' | 'report' | null;
   topic: string | null;
 }
 
@@ -63,7 +63,7 @@ export function useRoute(): Route {
   return useMemo(() => {
     const [sheet, topic] = hash.replace(/^#/, '').split('/');
     if (sheet === 'help') return { sheet, topic: topic || null };
-    if (sheet === 'about') return { sheet, topic: null };
+    if (sheet === 'about' || sheet === 'report') return { sheet, topic: null };
     return { sheet: null, topic: null };
   }, [hash]);
 }

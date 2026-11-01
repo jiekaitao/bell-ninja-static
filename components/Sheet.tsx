@@ -4,7 +4,7 @@ import { useEffect, useRef, type ReactNode } from 'react';
 
 interface SheetProps {
   open: boolean;
-  tone: 'help' | 'about';
+  tone: 'help' | 'about' | 'report';
   label: string;
   /** Escape, the close button, or a click outside: closes one layer. */
   onDismiss: () => void;

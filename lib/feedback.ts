@@ -51,7 +51,7 @@ export function draftBody({ now, period, caption, version }: DraftContext): stri
     '',
     "What's wrong: [please describe]",
     '',
-    "Here's where to find the actual schedule: [paste a link here]",
+    "Today's actual schedule: [attach schedule here]",
   ].join('\r\n');
 }
 

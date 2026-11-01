@@ -331,7 +331,7 @@ test('the email draft carries the schedule context, safely encoded', function ()
   ok(body.indexOf('Displayed period: Break & lunch? #1 + 2') !== -1);
   ok(body.indexOf('Displayed bell times: Period 4 - 10:54 to 11:40') !== -1);
   ok(body.indexOf('Site version: 202610051234') !== -1);
-  ok(/Here's where to find the actual schedule: \[paste a link here\]$/.test(body));
+  ok(/Today's actual schedule: \[attach schedule here\]$/.test(body));
 
   var link = draftLink(body);
   ok(link.indexOf('mailto:jack@lecturehat.com?subject=Bell%20Ninja%20schedule%20correction&body=') === 0);

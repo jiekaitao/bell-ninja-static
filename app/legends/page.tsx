@@ -1,12 +1,12 @@
 import type { Metadata } from 'next';
-import { Fira_Mono, Permanent_Marker } from 'next/font/google';
+import { Fira_Mono } from 'next/font/google';
 import Link from 'next/link';
+import { marker } from '@/lib/fonts';
 import { ROCKET_SVG } from './rocket';
 import './legends.css';
 
 export const metadata: Metadata = { title: 'Bell Ninja - Supporters' };
 
-const marker = Permanent_Marker({ subsets: ['latin'], weight: '400', display: 'swap' });
 const mono = Fira_Mono({ subsets: ['latin'], weight: '500', display: 'swap' });
 
 const LEGENDS = [
