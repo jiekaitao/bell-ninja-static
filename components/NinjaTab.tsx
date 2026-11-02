@@ -38,17 +38,15 @@ function NinjaWithSign() {
           </g>
         </g>
 
-        {/* Ta-da: an arm from each shoulder, both presenting to the right. They're
-            a shade lighter than the body so the one crossing the chest reads. */}
-        <g className="ninja-arm ninja-arm-low">
-          <path d="M70 114Q110 132 148 121" stroke="#34343b" strokeWidth="15" strokeLinecap="round" fill="none" />
-          <circle cx="155" cy="119" r="10.5" fill="#34343b" />
-          <ellipse cx="153" cy="108" rx="4" ry="6.5" fill="#34343b" transform="rotate(-18 153 108)" />
+        {/* Ta-da: stubby arms flung out from each shoulder, in the body's color
+            so they read as part of it. */}
+        <g className="ninja-arm ninja-arm-left">
+          <path d="M67 114Q50 112 39 98" stroke="#232327" strokeWidth="14" strokeLinecap="round" fill="none" />
+          <circle cx="35" cy="93" r="9.5" fill="#232327" />
         </g>
-        <g className="ninja-arm ninja-arm-high">
-          <path d="M110 112L155 84" stroke="#34343b" strokeWidth="15" strokeLinecap="round" fill="none" />
-          <circle cx="161" cy="80" r="10.5" fill="#34343b" />
-          <ellipse cx="156" cy="69" rx="4" ry="6.5" fill="#34343b" transform="rotate(-24 156 69)" />
+        <g className="ninja-arm ninja-arm-right">
+          <path d="M113 114Q130 112 141 98" stroke="#232327" strokeWidth="14" strokeLinecap="round" fill="none" />
+          <circle cx="145" cy="93" r="9.5" fill="#232327" />
         </g>
 
         <g className="ninja-sign">
@@ -59,9 +57,9 @@ function NinjaWithSign() {
           <circle cx="154" cy="99" r="11" fill="#232327" />
         </g>
 
-        <path className="ninja-sparkle" d={sparkle(176, 58, 9)} fill="#ffe08a" />
-        <path className="ninja-sparkle" d={sparkle(177, 100, 6)} fill="#ffe08a" />
-        <path className="ninja-sparkle" d={sparkle(170, 140, 6)} fill="#ffe08a" />
+        <path className="ninja-sparkle" d={sparkle(164, 72, 9)} fill="#ffe08a" />
+        <path className="ninja-sparkle" d={sparkle(168, 106, 6)} fill="#ffe08a" />
+        <path className="ninja-sparkle" d={sparkle(16, 112, 6)} fill="#ffe08a" />
       </g>
     </svg>
   );

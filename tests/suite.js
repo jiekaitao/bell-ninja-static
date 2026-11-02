@@ -58,8 +58,6 @@ var sweep = { bad: [], minutes: 0 };
         if (!reading.caption || /undefined|NaN/.test(reading.caption)) sweep.bad.push(label + ' caption ' + reading.caption);
         if (isNaN(reading.target.getTime())) sweep.bad.push(label + ' invalid target');
         if (reading.target.getTime() <= now.getTime()) sweep.bad.push(label + ' target in the past');
-        var share = progress(reading, now.getTime());
-        if (!(share >= 0 && share <= 1)) sweep.bad.push(label + ' progress ' + share);
       } catch (err) {
         sweep.bad.push(label + ' threw ' + err.message);
       }

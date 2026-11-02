@@ -10,7 +10,7 @@ import { BellIcon, MoonIcon, SunIcon } from './icons';
 import NinjaTab from './NinjaTab';
 import ReportSheet from './ReportSheet';
 import { useScheduleDrawer, useTheme } from '@/lib/preferences';
-import { clockLabel, clockUnits, progress, readSchedule, secondsLeft, shortClock, type Reading } from '@/lib/schedule';
+import { clockLabel, clockUnits, readSchedule, secondsLeft, shortClock, type Reading } from '@/lib/schedule';
 import { useBell } from '@/lib/use-bell';
 import { useNow } from '@/lib/use-now';
 import { openRoute, useRoute } from '@/lib/use-route';
@@ -107,7 +107,6 @@ export default function Board() {
   }, [left]);
   useEffect(() => () => { document.title = PAGE_TITLE; }, []);
 
-  const done = reading && now !== null ? progress(reading, now) : 0;
   const bellLabel = !bell.on ? 'Bell off' : bell.unlocked ? 'Bell on' : 'Tap for bell';
 
   return (
@@ -145,16 +144,6 @@ export default function Board() {
             <h1 aria-live="polite">{reading?.period ?? 'When is the bell going to ring?'}</h1>
             <p className="detail">{reading?.detail ?? ' '}</p>
             <Clock left={left} />
-            <div
-              className="progress"
-              role="progressbar"
-              aria-label="Progress through the current period"
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={Math.round(done * 100)}
-            >
-              <span style={{ transform: `scaleX(${done})` }} />
-            </div>
             <p className="next">
               {reading?.next ? <>Next: {reading.next.label} at {clockLabel(reading.next.startsAt)}</> : ' '}
             </p>

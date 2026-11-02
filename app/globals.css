@@ -21,8 +21,6 @@
   --clock-well: rgba(0, 0, 0, 0.14);
   --clock-face: var(--coral-deep);
   --clock-ink: var(--cream);
-  --track: rgba(255, 255, 255, 0.28);
-  --bar: var(--cream);
   --control-bg: rgba(0, 0, 0, 0.16);
   --control-hover: rgba(0, 0, 0, 0.28);
 
@@ -62,8 +60,6 @@
   --clock-well: #141414;
   --clock-face: #000;
   --clock-ink: #ff8f8f;
-  --track: #2b2b2b;
-  --bar: #ff8f8f;
   --control-bg: #1c1c1c;
   --control-hover: #2e2e2e;
 
@@ -285,25 +281,8 @@ p {
   letter-spacing: 0.08em;
 }
 
-.progress {
-  max-width: 600px;
-  height: 6px;
-  margin-top: 16px;
-  overflow: hidden;
-  border-radius: 3px;
-  background: var(--track);
-}
-
-.progress span {
-  display: block;
-  height: 100%;
-  background: var(--bar);
-  transform-origin: left;
-  transition: transform 1s linear;
-}
-
 .next {
-  margin-top: 10px;
+  margin-top: 16px;
   font-size: 1rem;
 }
 
@@ -605,14 +584,14 @@ p {
   transition: opacity 0.1s, transform 0.2s ease-in;
 }
 
-.ninja-arm-high {
-  transform-origin: 110px 112px;
+.ninja-arm-right {
+  transform-origin: 113px 114px;
   transform: rotate(95deg) scale(0.7);
 }
 
-.ninja-arm-low {
-  transform-origin: 70px 114px;
-  transform: rotate(50deg) scale(0.7);
+.ninja-arm-left {
+  transform-origin: 67px 114px;
+  transform: rotate(-95deg) scale(0.7);
 }
 
 .ninja-sparkle {
@@ -654,7 +633,7 @@ p {
   transition: opacity 0.1s 0.14s, transform 0.42s cubic-bezier(0.34, 1.9, 0.64, 1) 0.14s;
 }
 
-.ninja-tab-open .ninja-arm-low {
+.ninja-tab-open .ninja-arm-left {
   transition-delay: 0.2s;
 }
 

@@ -162,8 +162,7 @@ export interface Reading {
   detail: string;
   startsAt: number;
   endsAt: number;
-  /** When the current row began and ends. */
-  start: Date;
+  /** When the current row ends. */
   target: Date;
   /** The next scheduled block today, if there is one. */
   next: ListedBell | null;
@@ -216,7 +215,6 @@ export function readSchedule(now: Date, special: readonly SpecialDay[] = SPECIAL
     detail: row[2] ?? times,
     startsAt,
     endsAt,
-    start: at(startsAt),
     target: at(endsAt),
     next: bells.find((bell) => bell.startsAt >= endsAt) ?? null,
     bells,
@@ -262,13 +260,6 @@ export function clockUnits(left: number): ClockUnit[] {
     units.push({ label: unit.label, value: i === 0 ? String(value) : ('0' + value).slice(-2) });
   });
   return units;
-}
-
-/** How far through the current row we are, from 0 to 1. */
-export function progress(reading: Reading, nowMs: number): number {
-  const total = reading.target.getTime() - reading.start.getTime();
-  if (total <= 0) return 0;
-  return Math.min(1, Math.max(0, (nowMs - reading.start.getTime()) / total));
 }
 
 /** "12:48", or "1:02:07" when hours are showing: for the browser tab. */
